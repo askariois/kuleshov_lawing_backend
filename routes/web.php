@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Crawler\CrawlerController;
+use App\Http\Controllers\Projects\ProjectsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -8,9 +10,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('projects', function () {
-        return Inertia::render('projects');
-    })->name('projects');
+    Route::resource('projects', ProjectsController::class);
+    Route::post('/scan', [CrawlerController::class, 'startScan']);
+    Route::get('/progress', [CrawlerController::class, 'getProgress']);
 });
 
 require __DIR__ . '/settings.php';
