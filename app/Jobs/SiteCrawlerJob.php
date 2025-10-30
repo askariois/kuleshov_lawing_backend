@@ -9,7 +9,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Crawler\Crawler;
-use Spatie\Crawler\CrawlProfiles\CrawlInternalUrls;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 use GuzzleHttp\Exception\RequestException;
@@ -17,6 +16,7 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 use GuzzleHttp\Client;
 use App\Models\Image;
 use App\Models\ImageLocation;
+use App\Models\Project;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriResolver;
 use Illuminate\Support\Facades\Log;
@@ -39,8 +39,13 @@ class SiteCrawlerJob implements ShouldQueue
 
    public function handle()
    {
-      // Инициализация прогресса: 0%, общее неизвестно, так что будем считать по обработанным страницам
-      Cache::put($this->cacheKey, ['progress' => 0, 'total_pages' => 0, 'processed_pages' => 0, 'status' => 'running'], now()->addHours(1));
+      // Инициализация
+      Cache::put($this->cacheKey, [
+         'progress' => 0,
+         'processed_pages' => 0,
+         'total_pages' => 0,
+         'status' => 'running'
+      ], now()->addHours(1));
 
       $observer = new class($this->startUrl, $this->projectId, $this->cacheKey) extends \Spatie\Crawler\CrawlObservers\CrawlObserver {
          private $httpClient;
@@ -59,73 +64,72 @@ class SiteCrawlerJob implements ShouldQueue
                'allow_redirects' => true,
                'verify' => false,
             ]);
+            $this->processedPages = 0;
          }
-
-         // public function willCrawl(UriInterface $url, ?UriInterface $foundOnUrl = null): void
-         // {
-         //    // Пустая реализация для совместимости
-         // }
 
          public function crawled(UriInterface $url, ResponseInterface $response, ?UriInterface $foundOnUrl = null, ?string $linkText = null): void
          {
             $this->processedPages++;
             $this->updateProgress();
 
+            // === Обработка изображений ===
             $html = (string) $response->getBody();
             $dom = new DomCrawler($html, (string) $url);
 
-            $images = $dom->filter('img')->each(function (DomCrawler $node) {
-               return $node->attr('src');
-            });
+            $images = $dom->filter('img')->each(fn($node) => $node->attr('src'));
 
             foreach ($images as $src) {
                if (empty($src)) continue;
 
-               // Превращаем строку в объект Uri
                $relativeUri = new Uri($src);
-
-               // Превращаем базовый URL (страницу, где нашли картинку) в Uri
                $baseUri = new Uri($url);
-
-               // Склеиваем относительный путь с базовым URL
                $imageUri = UriResolver::resolve($baseUri, $relativeUri);
-
                $imageUrl = (string) $imageUri;
 
-               // Проверяем, что хост тот же
+               // Пропускаем внешние домены
                if (parse_url($imageUrl, PHP_URL_HOST) !== parse_url($this->startUrl, PHP_URL_HOST)) {
                   continue;
                }
 
-               // Получаем метаданные без скачивания (HEAD запрос)
                try {
-                  $imageResponse = $this->httpClient->head($imageUrl);
-                  $mimeType = $imageResponse->getHeaderLine('Content-Type') ?: 'image/unknown';
-                  $size = (int) $imageResponse->getHeaderLine('Content-Length') ?: 0;
+                  $head = $this->httpClient->head($imageUrl);
+                  $mime = $head->getHeaderLine('Content-Type') ?: 'image/unknown';
+                  $contentLength = (int) $head->getHeaderLine('Content-Length') ?: 0;
 
-                  // Генерируем имя и путь (path теперь = URL, так как не скачиваем)
-                  $extension = pathinfo($imageUri->getPath(), PATHINFO_EXTENSION) ?: 'jpg';
-                  $name = Str::slug(pathinfo($imageUri->getPath(), PATHINFO_FILENAME)) . '.' . $extension;
-                  $path = $imageUrl; // Используем URL как path
+                  // === Получаем размеры изображения (через GET + getimagesizefromstring) ===
+                  $imageResponse = $this->httpClient->get($imageUrl);
+                  $imageData = $imageResponse->getBody()->getContents();
 
-                  // Сохраняем в БД
+                  $sizeInfo = @getimagesizefromstring($imageData);
+                  $width = $sizeInfo[0] ?? null;
+                  $height = $sizeInfo[1] ?? null;
+
+                  // === Генерируем имя и путь ===
+                  $ext = pathinfo($imageUri->getPath(), PATHINFO_EXTENSION) ?: 'jpg';
+                  $name = Str::slug(pathinfo($imageUri->getPath(), PATHINFO_FILENAME)) . '.' . $ext;
+                  $path = $imageUrl;
+
+                  // === Сохраняем изображение с размерами ===
                   $image = Image::firstOrCreate(
                      ['path' => $path, 'project_id' => $this->projectId],
                      [
                         'name' => $name,
-                        'mime_type' => $mimeType,
-                        'size' => $size,
-                        'status' => 'processed',
+                        'mime_type' => $mime,
+                        'size' => $contentLength,
+                        'width' => $width,
+                        'height' => $height,
+                        'dimensions' => $width && $height ? ['width' => $width, 'height' => $height] : null,
+                        'status' => 'raw',
                      ]
                   );
 
+                  // === Сохраняем местоположение: URL страницы, где найдено ===
                   ImageLocation::firstOrCreate([
                      'image_id' => $image->id,
-                     'url' => $imageUrl,
+                     'url' => (string) $url, // ← Это URL текущей страницы!
                   ]);
                } catch (\Exception $e) {
-                  // Логируем ошибку
-                  Log::error("Ошибка обработки изображения $imageUrl: " . $e->getMessage());
+                  Log::warning("Image processing failed for $imageUrl: " . $e->getMessage());
                }
             }
          }
@@ -134,24 +138,46 @@ class SiteCrawlerJob implements ShouldQueue
          {
             $this->processedPages++;
             $this->updateProgress();
-            Log::error("Ошибка краулинга $url: " . $exception->getMessage());
+            Log::error("Crawl failed: $url — " . $exception->getMessage());
          }
 
          public function finishedCrawling(): void
          {
-            Cache::put($this->cacheKey, ['progress' => 100, 'total_pages' => $this->processedPages, 'processed_pages' => $this->processedPages, 'status' => 'completed'], now()->addHours(1));
+            // НЕ ставим progress = 100
+            // Оставляем последний рассчитанный progress (например, 95%)
+            // Меняем только статус
+
+            Project::where('id', $this->projectId)->update(['last_scan' => now()]);
+
+            $lastData = Cache::get($this->cacheKey, [
+               'progress' => 0,
+               'processed_pages' => $this->processedPages,
+               'total_pages' => 0,
+               'status' => 'running'
+            ]);
+
+            Cache::put($this->cacheKey, [
+               'progress' => $lastData['progress'], // оставляем как есть
+               'processed_pages' => $this->processedPages,
+               'total_pages' => $lastData['total_pages'],
+               'status' => 'completed'
+            ], now()->addHours(1));
          }
 
-         private function updateProgress()
+         private function updateProgress(): void
          {
-            // Поскольку общее кол-во страниц неизвестно заранее, используем эвристику: прогресс на основе обработанных (например, предполагаем макс 100 страниц, или адаптируем)
-            // Для простоты: пока не 100%, ставим прогресс как (processed / estimated_total) * 100, но estimated_total обновляем из очереди краулера (но в Spatie нет прямого доступа)
-            // Альтернатива: просто считать processed, а фронт пусть показывает "Обработано X страниц..."
-            // Для процентов: давайте предположим max_pages из конфига, и используем его как total
-            $data = Cache::get($this->cacheKey);
-            $total = $data['total_pages'] ?: 100; // Default estimate, или взять из настроек
-            $progress = min(100, ($this->processedPages / $total) * 100);
-            Cache::put($this->cacheKey, ['progress' => $progress, 'total_pages' => $total, 'processed_pages' => $this->processedPages, 'status' => 'running'], now()->addHours(1));
+            // Оценочный прогресс: processed * 3 → минимум 50
+            $estimatedTotal = max(50, $this->processedPages * 3);
+            $progress = $this->processedPages > 0
+               ? min(99, round(($this->processedPages / $estimatedTotal) * 100, 1))
+               : 0;
+
+            Cache::put($this->cacheKey, [
+               'progress' => $progress,
+               'processed_pages' => $this->processedPages,
+               'total_pages' => $estimatedTotal,
+               'status' => 'running'
+            ], now()->addHours(1));
          }
       };
 
@@ -160,8 +186,8 @@ class SiteCrawlerJob implements ShouldQueue
       ])
          ->ignoreRobots()
          ->setCrawlObserver($observer)
-         ->setCrawlProfile(new CrawlInternalUrls($this->startUrl))
-         ->setMaximumDepth(3)
+         ->setCrawlProfile(new \App\Crawler\CustomCrawlProfile($this->startUrl))
+         ->setMaximumDepth(10)
          ->setConcurrency(5)
          ->startCrawling($this->startUrl);
    }

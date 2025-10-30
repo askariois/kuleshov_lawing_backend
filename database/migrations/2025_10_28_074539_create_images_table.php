@@ -12,8 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('path'); // путь на сервере или в хранилище
-            $table->string('mime_type');
-            $table->unsignedBigInteger('size');
+            $table->string('mime_type')->nullable();
+            $table->unsignedBigInteger('size')->nullable();
+            $table->json('dimensions')->nullable();
+            $table->unsignedInteger('width')->nullable();
+            $table->unsignedInteger('height')->nullable();
             $table->string('status')->default('pending'); // pending, processed, error
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->timestamps();

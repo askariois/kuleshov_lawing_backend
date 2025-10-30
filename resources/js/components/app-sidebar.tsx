@@ -25,17 +25,22 @@ import {
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import 'dayjs/locale/ru'; // для русского
+
+dayjs.extend(relativeTime);
+dayjs.extend(localizedFormat);
+
 
 const mainNavItems: NavItem[] = [
-    { title: 'Изображения', href: '/images', border: true },
+    { title: 'Изображения', href: '/images/' + localStorage.getItem("selectedProjectId"), border: true },
     { title: 'ТЗ на замену', href: '/projects' },
     { title: 'Запрос заказчику', href: '/projects', border: true },
 ];
 
-const footerNavItems: NavItem[] = [
-    { title: 'Repository', href: 'https://github.com/laravel/react-starter-kit', icon: Folder },
-    { title: 'Documentation', href: 'https://laravel.com/docs/starter-kits#react', icon: BookOpen },
-];
 
 interface ISidebarData {
     sidebar: {
@@ -45,20 +50,26 @@ interface ISidebarData {
 
 export function AppSidebar() {
     const { sidebar } = usePage<ISidebarData>().props;
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(localStorage.getItem('selectedProjectId') || null);
 
     // Определяем, выбран ли проект
     const isProjectSelected = selectedProjectId !== null;
 
     const onScan = () => {
-        router.post('/scan', {}, {
+        router.post('/scan', { 'url': sidebar.projects.find(p => p.id == selectedProjectId)?.url, 'project_id': selectedProjectId }, {
             onSuccess: () => {
-                console.log('Сканирование успешно запущено');
+                toast.success('Сканирование запущено!')
+
             },
             onError: (errors) => {
                 console.log('Ошибки валидации:', errors);
             },
         });
+    }
+
+    const onSelected = (value: string) => {
+        setSelectedProjectId(value || null);
+        localStorage.setItem('selectedProjectId', value || '');
     }
 
     return (
@@ -80,7 +91,7 @@ export function AppSidebar() {
                     </Label>
                     <Select
                         value={selectedProjectId || ''}
-                        onValueChange={(value) => setSelectedProjectId(value || null)}
+                        onValueChange={(value) => onSelected(value)}
                     >
                         <SelectTrigger
                             id="project-select"
@@ -122,6 +133,10 @@ export function AppSidebar() {
                     </div>
                 )}
             </SidebarContent>
+            <Toaster
+                position="top-right"
+                reverseOrder={false}
+            />
         </Sidebar>
     );
 }

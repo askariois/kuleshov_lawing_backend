@@ -9,6 +9,13 @@ class Image extends Model
 {
     protected $guarded = [];
 
+
+    protected $casts = [
+        'dimensions' => 'array', // ← Автоматически → array в PHP
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function locations(): HasMany
     {
         return $this->hasMany(ImageLocation::class);

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Projects\ProfileStoreRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Models\Project;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,6 +19,9 @@ class ProjectsController extends Controller
     public function index(Request $request): Response
     {
         $projects = Project::withCount([
+            'images as images_count' => function ($query) {
+                $query;
+            },
             'images as processed_images' => function ($query) {
                 $query->where('status', 'processed');
             },

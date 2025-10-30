@@ -4,11 +4,12 @@ import AppLayout from '@/layouts/app-layout';
 import Header from '../components/ui/header';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Modal from '@/components/widget/modal/modal';
 import { Input } from '@/components/ui/input';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
+import dayjs from 'dayjs';
 
 // === Проект ===
 interface Project {
@@ -44,15 +45,27 @@ interface Props extends PageProps {
     flash?: { success?: string };
     errors?: Record<string, string>;
 }
+
+
+interface ProgressData {
+    progress: number;
+    processed_pages: number;
+    total_pages: number;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+}
+
+
+
+
 export default function Projects() {
     const [add, setAdd] = useState(false);
     const { projects, flash, errors: serverErrors } = usePage<Props>().props;
-
+    const [progressMap, setProgressMap] = useState<Record<number, ProgressData>>({});
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         url: 'https://', // Предзаполняем https://
     });
-
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const onAdd = () => setAdd(!add);
 
     const onSubmit = (e: React.FormEvent) => {
@@ -67,6 +80,43 @@ export default function Projects() {
             },
         });
     };
+
+
+    useEffect(() => {
+        const projectIds = projects.data.map(p => p.id);
+        if (projectIds.length === 0) return;
+
+        const initial: Record<number, ProgressData> = {};
+        projectIds.forEach(id => {
+            initial[id] = { progress: 0, processed_pages: 0, total_pages: 0, status: 'pending' };
+        });
+        setProgressMap(initial);
+
+        const poll = async () => {
+            const responses = await Promise.all(
+                projectIds.map(id =>
+                    fetch(`/progress?project_id=${id}`)
+                        .then(r => r.json())
+                        .catch(() => null)
+                )
+            );
+
+            const updated: Record<number, ProgressData> = {};
+            responses.forEach((data, i) => {
+                if (data?.status) {
+                    updated[projectIds[i]] = data;
+                }
+            });
+
+            setProgressMap(prev => ({ ...prev, ...updated }));
+        };
+
+        poll();
+        const interval = setInterval(poll, 2000);
+
+        return () => clearInterval(interval);
+    }, [projects.data]);
+
 
 
     return (
@@ -100,10 +150,11 @@ export default function Projects() {
                     className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                     style={{
                         gridTemplateColumns:
-                            "minmax(300px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(20px, 0.2fr)",
+                            "minmax(180px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(20px, 0.2fr)",
                     }}
                 >
                     <div className="font-semibold">URL</div>
+                    <div className="font-semibold">Процесс сканирования</div>
                     <div className="font-semibold">Посл. сканирование</div>
                     <div className="font-semibold">Всего изобр.</div>
                     <div className="font-semibold">Обработанно</div>
@@ -111,13 +162,17 @@ export default function Projects() {
                     <div className="font-semibold"></div>
                 </div>
 
-                {projects.data.length !== 0 && projects.data.map((project) => (
-                    <div
+                {projects.data.length !== 0 && projects.data.map((project) => {
+                    const progress = progressMap[project.id] || { progress: 0, status: 'pending' };
+                    const isRunning = progress.status === 'running';
+                    const isCompleted = progress.status === 'completed';
+
+                    return (<div
                         key={project.id}
                         className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                         style={{
                             gridTemplateColumns:
-                                "minmax(300px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(20px, 0.2fr)",
+                                "minmax(180px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(20px, 0.2fr)",
                         }}
                     >
                         <div>
@@ -125,10 +180,25 @@ export default function Projects() {
                                 {project.url}
                             </a>
                         </div>
-                        <div>{project.last_scan || '—'}</div>
-                        <div className="text-[#7C7C7C] font-medium">{project.images_count}</div>
-                        <div className="text-[#7C7C7C] font-medium">{project.processed_images}</div>
-                        <div className="text-[#7C7C7C] font-medium">{project.not_processed_images}</div>
+                        <div className="space-y-1">
+                            {isRunning && (
+                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                        className="bg-blue-600 h-full transition-all duration-500"
+                                        style={{ width: `${progress.progress}%` }}
+                                    />
+                                </div>
+                            )}
+                            <div className="text-xs text-gray-500">
+                                {isRunning && `${Math.round(progress.progress)}%`}
+                                {isCompleted && 'Готово'}
+                                {!isRunning && !isCompleted && '—'}
+                            </div>
+                        </div>
+                        <div>{project.last_scan ? dayjs(project.last_scan).format('DD.MM.YYYY  HH:mm') : '—'}</div>
+                        <div className="text-[#7C7C7C] font-bold">{project.images_count}</div>
+                        <div className="text-[#7C7C7C] font-bold">{project.processed_images}</div>
+                        <div className={`font-bold ${project.not_processed_images == 0 ? "text-[#0AA947]" : "text-[#E45454]"}`}>{project.not_processed_images}</div>
                         <div className="flex justify-center">
                             <svg width="13" height="14" viewBox="0 0 13 14" fill="none">
                                 <path
@@ -140,7 +210,8 @@ export default function Projects() {
                             </svg>
                         </div>
                     </div>
-                ))}
+                    )
+                })}
             </div>
 
             {/* Модалка */}
