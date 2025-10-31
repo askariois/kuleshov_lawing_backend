@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Image;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,50 +14,73 @@ class ImagesController extends Controller
 {
     function index(Request $request, $id): Response
     {
-        $images = Image::with('locations')->where('project_id', $id)->paginate(15);
+        $images = Image::with('locations');
+
+        $images =   $images->where('project_id', $id)->paginate(15);
+        $raw =   Image::with('locations')->where('project_id', $id)->where('status', 'raw')->count();
+
+
         return Inertia::render('images', [
+            'images' =>   $images,
+            'raw' =>   $raw,
+            'status' => $request->session()->get('status'),
+        ]);
+    }
+
+
+    function customer_request(Request $request, $id): Response
+    {
+        $images = Image::with('locations');
+        $images =   $images->where('project_id', $id)->where('status', 'clent')->paginate(15);
+        return Inertia::render('costumer-request', [
             'images' =>   $images,
             'status' => $request->session()->get('status'),
         ]);
     }
 
-    function primary_sorting(Request $request, $id): Response
+    function primary_sorting($id, Request $request): Response
     {
-        $images = Image::with('locations')->where('project_id', $id)->where('status', 'raw')->paginate(1);
+        $page = $request->query('page', 1);
+
+        $images = Image::with('locations')
+            ->where('project_id', $id)
+            ->where('status', 'raw')
+            ->paginate(1, ['*'], 'page', $page);
+
         return Inertia::render('primary-sorting', [
             'images' => $images,
+            'currentPage' => $images->currentPage(),
             'projectId' => $id,
-            'currentPage' => $images->currentPage(), // ← ВОТ ЭТО!
         ]);
     }
 
-    public function primarySort(Request $request, $id): RedirectResponse
+
+    public function primarySort(Request $request, $id): HttpResponse
     {
         $status = $request->input('status');
+        $projectId = $request->input('project_id') ?? $request->route('id');
 
-        // 1. Обновляем статус текущего изображения
-        $updated = Image::with('locations')->where('id', $id)->update(['status' => $status]);
+        $updated = Image::where('id', $id)->update(['status' => $status]);
 
-        // 2. Если обновление не удалось — возвращаем ошибку
-        if (!$updated) {
-            return redirect()
-                ->route('primary.sorting.index', [
-                    'id' => 1,
-                    'page' => 1,
-                ]);
+        // Определяем следующую страницу
+        $currentPage = $request->input('page', 1);
+        $nextPage = $currentPage;
+
+        $images = Image::with('locations')
+            ->where('project_id', $projectId)
+            ->where('status', 'raw')
+            ->paginate(1, ['*'], 'page', $nextPage);
+
+        // Если пусто — переходим на страницу 1
+        if ($images->isEmpty() && $currentPage > 1) {
+            $nextPage = 1;
+            $images = Image::with('locations')
+                ->where('project_id', $projectId)
+                ->where('status', 'raw')
+                ->paginate(1, ['*'], 'page', $nextPage);
         }
 
-        $images = Image::with('locations')->where('project_id', 1)->where('status', 'raw')->paginate(1);
 
-        // 7. Возвращаем страницу с новым изображением
-        return redirect()
-            ->route('primary.sorting.index', [
-                'id' => 1,
-                'page' => 1,
-            ]);
-        // return Inertia::render('primary-sorting', [
-        //     'images' => $images,
-        //     'success' => 'Статус обновлён. Следующее изображение.',
-        // ]);
+        return Inertia::location("/primary-sorting/{$projectId}?page={$nextPage}");
     }
 }

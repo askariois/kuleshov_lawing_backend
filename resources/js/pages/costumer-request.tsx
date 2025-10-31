@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import CopyLink from '@/components/ui/copy-link/CopyLink';
-import Status from './../components/ui/status/Status';
+import Status from '../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
 
@@ -52,7 +52,7 @@ interface Props extends PageProps {
 
 
 
-export default function Images() {
+export default function CustomerRequest() {
    const id = localStorage.getItem("selectedProjectId")
    const { images, raw, errors: serverErrors } = usePage<Props>().props;
 
@@ -63,8 +63,7 @@ export default function Images() {
 
    return (
       <AppLayout>
-         <Header title="Изображения" subtitle={`Всего: ${images.total}`}>
-            <TextLink href={`/primary-sorting/${id}`} variant="primary" size={'lg'} >Первичная сортировка ({raw})</TextLink>
+         <Header title="Запрос заказчику" subtitle={`Всего: ${images.total}`}>
          </Header>
 
 

@@ -23,10 +23,10 @@ class ProjectsController extends Controller
                 $query;
             },
             'images as processed_images' => function ($query) {
-                $query->where('status', 'processed');
+                $query->whereIn('status', ['design', 'author', 'replaced']);
             },
             'images as not_processed_images' => function ($query) {
-                $query->where('status', '!=', 'processed');
+                $query->where('status',  'raw');
             },
         ])->paginate(15);
 

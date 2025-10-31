@@ -195,7 +195,7 @@ export default function Projects() {
                                 {!isRunning && !isCompleted && '—'}
                             </div>
                         </div>
-                        <div>{project.last_scan ? dayjs(project.last_scan).format('DD.MM.YYYY  HH:mm') : '—'}</div>
+                        <div className="text-[#7C7C7C] font-bold">{project.last_scan ? dayjs(project.last_scan).format('DD.MM.YYYY  HH:mm') : '—'}</div>
                         <div className="text-[#7C7C7C] font-bold">{project.images_count}</div>
                         <div className="text-[#7C7C7C] font-bold">{project.processed_images}</div>
                         <div className={`font-bold ${project.not_processed_images == 0 ? "text-[#0AA947]" : "text-[#E45454]"}`}>{project.not_processed_images}</div>

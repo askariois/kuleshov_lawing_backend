@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/images/{id}', [ImagesController::class, 'index']);
     Route::get('/primary-sorting/{id}', [ImagesController::class, 'primary_sorting'])->name('primary.sorting.index');;
     Route::post('/primary-sorting/{id}/sort', [ImagesController::class, 'primarySort']);
+
+    Route::get('/customer_request/{id}', [ImagesController::class, 'customer_request']);
 });
 
 require __DIR__ . '/settings.php';

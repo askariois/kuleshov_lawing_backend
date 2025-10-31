@@ -38,7 +38,7 @@ dayjs.extend(localizedFormat);
 const mainNavItems: NavItem[] = [
     { title: 'Изображения', href: '/images/' + localStorage.getItem("selectedProjectId"), border: true },
     { title: 'ТЗ на замену', href: '/projects' },
-    { title: 'Запрос заказчику', href: '/projects', border: true },
+    { title: 'Запрос заказчику', href: '/customer_request/' + localStorage.getItem("selectedProjectId"), border: true },
 ];
 
 

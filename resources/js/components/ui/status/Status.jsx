@@ -10,10 +10,10 @@ function Status({ status, style }) {
           <div className="text-[10px] text-[#7C7C7C] font-medium">Элемент дизайна</div></>;
       case "author":
           return <><div className="text-[#0AA947]">Обработано</div>
-          <div>Авторское</div></>;
+            <div className="text-[10px] text-[#7C7C7C] font-medium">Авторское</div></>;
       case "replaced":
           return <><div className="text-[#0AA947]">Обработано</div>
-          <div>Заменено</div></>;
+          <div className="text-[10px] text-[#7C7C7C] font-medium">Заменено</div></>;
       case "clent":
           return <><div className="text-[#F59106]">В ТЗ</div></>;
       default:
