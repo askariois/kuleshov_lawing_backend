@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('auth/login');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -16,6 +16,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/progress', [CrawlerController::class, 'getProgress']);
 
     Route::get('/images/{id}', [ImagesController::class, 'index']);
+    Route::get('/primary-sorting/{id}', [ImagesController::class, 'primary_sorting'])->name('primary.sorting.index');;
+    Route::post('/primary-sorting/{id}/sort', [ImagesController::class, 'primarySort']);
 });
 
 require __DIR__ . '/settings.php';

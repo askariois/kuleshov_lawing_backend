@@ -9,7 +9,17 @@ class Image extends Model
 {
     protected $guarded = [];
 
-
+    protected $fillable = [
+        'name',
+        'path',
+        'mime_type',
+        'size',
+        'dimensions',
+        'width',
+        'height',
+        'status',
+        'project_id',
+    ];
     protected $casts = [
         'dimensions' => 'array', // ← Автоматически → array в PHP
         'created_at' => 'datetime',

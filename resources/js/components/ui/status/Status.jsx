@@ -3,33 +3,31 @@ import React from "react";
 function Status({ status, style }) {
   const getStatusStyle = (status) => {
     switch (status) {
-      case "Необработанное":
-      case "Частично необработанное":
-      case "ИИ":
-      case "404":
-        return "text-red-600";
-      case "Авторское":
-      case "Весенятное":
-        return "text-green-600";
-      case "Лицензия":
-        return "text-blue-600";
-      case "В ТЗ":
-      case "Запрос клиента":
-        return "text-yellow-600";
-      case "Исключено":
-        return "text-gray-600";
+      case "raw":
+         return <><div className="text-[#E45454]">Необработанное</div></>;
+      case "design":
+          return <><div className="text-[#0AA947]">Обработано</div>
+          <div className="text-[10px] text-[#7C7C7C] font-medium">Элемент дизайна</div></>;
+      case "author":
+          return <><div className="text-[#0AA947]">Обработано</div>
+          <div>Авторское</div></>;
+      case "replaced":
+          return <><div className="text-[#0AA947]">Обработано</div>
+          <div>Заменено</div></>;
+      case "clent":
+          return <><div className="text-[#F59106]">В ТЗ</div></>;
       default:
-        return "text-gray-600";
+           return <><div className="text-[#E45454]">Необработанное</div></>;
     }
   };
 
   return (
     <div
-      className={`${getStatusStyle(status)} ${
+      className={`${
         style ? style : "text-[13px]"
-      } font-bold`}
+      }  font-bold text-[13px] text-right`}
     >
-      {status}
+  {getStatusStyle(status)} 
     </div>
   );
 }
