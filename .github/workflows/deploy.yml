@@ -2,7 +2,7 @@ name: Deploy Laravel
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy:
@@ -59,7 +59,7 @@ jobs:
           remote_user: ${{ secrets.SERVER_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
           remote_path: ${{ secrets.SERVER_PATH }}
-          local_path: "./"
+          local_path: './'
           archive: true
           excludes: |
             .env
@@ -83,5 +83,4 @@ jobs:
             php artisan route:cache
             php artisan view:cache
             php artisan optimize
-            # Если есть, запустите: npm run prod (но лучше собирать в CI)
             chown -R www-data:www-data storage bootstrap/cache
