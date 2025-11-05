@@ -28,10 +28,16 @@ class CheckImageDuplicates implements ShouldQueue
 
         try {
             $response = Http::withHeaders([
-                'x-api-key' => "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^",
+                'x-api-key' => config('services.tineye.api_key'),
             ])->timeout(60)->get('https://api.tineye.com/rest/search/', [
-                'image_url' => "https://api.tineye.com/rest/docs/img/meloncat.jpg",
+                'image_url' =>  $this->image->path,
             ]);
+
+            // $response = Http::withHeaders([
+            //     'x-api-key' => "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^",
+            // ])->timeout(60)->get('https://api.tineye.com/rest/search/', [
+            //     'image_url' => "https://api.tineye.com/rest/docs/img/meloncat.jpg",
+            // ]);
             Log::info("Дубликат {$response->successful()}");
             if ($response->successful()) {
                 $data = $response->json();
@@ -55,9 +61,6 @@ class CheckImageDuplicates implements ShouldQueue
                         'checked_at'          => now(),
                     ]
                 );
-
-                // Статус: проверено
-                $this->image->update(['status' => 'checked']);
             } else {
                 Log::warning('TinEye API не вернул 200', [
                     'image_id' =>  $this->image->id,

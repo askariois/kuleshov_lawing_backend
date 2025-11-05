@@ -38,4 +38,14 @@ class ImagesController extends Controller
             'status' => $request->session()->get('status'),
         ]);
     }
+
+    function tor(Request $request, $id): Response
+    {
+        $images = Image::with('locations');
+        $images =   $images->where('project_id', $id)->where('status', 'ToR')->paginate(15);
+        return Inertia::render('tor', [
+            'images' =>   $images,
+            'status' => $request->session()->get('status'),
+        ]);
+    }
 }

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import CopyLink from '@/components/ui/copy-link/CopyLink';
-import Status from './../components/ui/status/Status';
+import Status from '../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
 
@@ -52,9 +52,9 @@ interface Props extends PageProps {
 
 
 
-export default function Images() {
+export default function Tor() {
    const id = localStorage.getItem("selectedProjectId")
-   const { images, raw, process, errors: serverErrors } = usePage<Props>().props;
+   const { images, raw, errors: serverErrors } = usePage<Props>().props;
 
    const { data, setData, post, processing, errors } = useForm({
       name: '',
@@ -63,11 +63,7 @@ export default function Images() {
 
    return (
       <AppLayout>
-         <Header title="Изображения" subtitle={`Всего: ${images.total}`}>
-            <div className='gap-1 flex'>
-               <TextLink href={`/primary-sorting/${id}`} variant={raw > 0 ? "primary" : "secondary"} size={'lg'} disabled={raw > 0 ? false : true}>Первичная сортировка ({raw})</TextLink>
-               <TextLink href={`/secondary-sorting/${id}`} variant={process > 0 ? "primary" : "secondary"} size={'lg'} disabled={process > 0 ? false : true}>Вторичная обработка ({process})</TextLink>
-            </div>
+         <Header title="ТЗ на замену" subtitle={`Всего: ${images.total}`}>
          </Header>
 
 
@@ -115,8 +111,7 @@ export default function Images() {
                   </div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{image.mime_type}</div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{image.width ? `${image.width} x ${image.height}` : "Не указано"}</div>
-                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url}     {image.locations.length > 1 && <div>+ещё {image.locations.length - 1}</div>}</div>
-
+                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url} {image.locations.length > 1 && <div>+ещё {image.locations.length - 1}</div>}</div>
 
                   <div className={`font-medium text-[13px] `}>
                      <Status status={image.status} />

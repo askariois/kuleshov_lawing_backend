@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Image extends Model
@@ -21,7 +22,7 @@ class Image extends Model
         'project_id',
     ];
     protected $casts = [
-        'dimensions' => 'array', // ← Автоматически → array в PHP
+        'dimensions' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -31,7 +32,12 @@ class Image extends Model
         return $this->hasMany(ImageLocation::class);
     }
 
-    public function project()
+    public function duplicate(): BelongsTo
+    {
+        return $this->belongsTo(ImageDuplicate::class, 'id', 'image_id');
+    }
+
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }

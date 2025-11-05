@@ -37,7 +37,7 @@ dayjs.extend(localizedFormat);
 
 const mainNavItems: NavItem[] = [
     { title: 'Изображения', href: '/images/' + localStorage.getItem("selectedProjectId"), border: true },
-    { title: 'ТЗ на замену', href: '/projects' },
+    { title: 'ТЗ на замену', href: '/tor/' + localStorage.getItem("selectedProjectId"), },
     { title: 'Запрос заказчику', href: '/customer_request/' + localStorage.getItem("selectedProjectId"), border: true },
 ];
 
@@ -72,9 +72,10 @@ export function AppSidebar() {
         setSelectedProjectId(projectId);
         localStorage.setItem('selectedProjectId', projectId || '');
 
-        // РЕДИРЕКТ СРАЗУ ПОСЛЕ ВЫБОРА
         window.location.href = `/projects`;
     }
+
+
 
     return (
         <Sidebar collapsible="icon" variant="inset">

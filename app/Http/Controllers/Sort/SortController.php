@@ -37,9 +37,7 @@ class SortController extends Controller
       $image = Image::findOrFail($id);
 
       if ($status == "process") {
-         if ($status === 'process') {
-            CheckImageDuplicates::dispatch($image);
-         }
+         CheckImageDuplicates::dispatch($image);
       }
 
 
@@ -64,5 +62,21 @@ class SortController extends Controller
 
 
       return Inertia::location("/primary-sorting/{$projectId}?page={$nextPage}");
+   }
+
+   function sort_secondary($id, Request $request): Response
+   {
+      $page = $request->query('page', 1);
+
+      $images = Image::with('locations', 'duplicate')
+         ->where('project_id', $id)
+         ->where('status', 'process')
+         ->paginate(1, ['*'], 'page', $page);
+
+      return Inertia::render('secondary-sorting', [
+         'images' => $images,
+         'currentPage' => $images->currentPage(),
+         'projectId' => $id,
+      ]);
    }
 }
