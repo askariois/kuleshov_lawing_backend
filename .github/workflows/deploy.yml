@@ -59,15 +59,9 @@ jobs:
           remote_user: ${{ secrets.SERVER_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
           remote_path: ${{ secrets.SERVER_PATH }}
-          local_path: './'
-          archive: true
-          excludes: |
-            .env
-            storage/
-            vendor/
-            node_modules/
-            .git/
+          path: './'
           switches: -avz --delete --delete-excluded
+          args: --exclude=.env --exclude=storage/ --exclude=vendor/ --exclude=node_modules/ --exclude=.git/
 
       # Пост-деплой команды через SSH (миграции, кэш и т.д.)
       - name: Run post-deployment commands

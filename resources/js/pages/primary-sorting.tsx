@@ -147,9 +147,9 @@ export default function PrimarySorting() {
                   <Button variant="secondary" size={'full'} className='text-[18px] font-semibold' onClick={() => onImage('clent')}>
                      Уточнить у клиента
                   </Button>
-                  {/* <Button variant="primary" size={'full'} className='ml-6 text-[18px] font-semibold'>
-                  На поиск
-               </Button> */}
+                  <Button variant="primary" size={'full'} className='ml-6 text-[18px] font-semibold' onClick={() => onImage('process')}>
+                     На поиск
+                  </Button>
                </div>
             </div>
 

@@ -54,7 +54,7 @@ interface Props extends PageProps {
 
 export default function Images() {
    const id = localStorage.getItem("selectedProjectId")
-   const { images, raw, errors: serverErrors } = usePage<Props>().props;
+   const { images, raw, process, errors: serverErrors } = usePage<Props>().props;
 
    const { data, setData, post, processing, errors } = useForm({
       name: '',
@@ -64,7 +64,10 @@ export default function Images() {
    return (
       <AppLayout>
          <Header title="Изображения" subtitle={`Всего: ${images.total}`}>
-            <TextLink href={`/primary-sorting/${id}`} variant="primary" size={'lg'} >Первичная сортировка ({raw})</TextLink>
+            <div className='gap-1 flex'>
+               <TextLink href={`/primary-sorting/${id}`} variant="primary" size={'lg'} >Первичная сортировка ({raw})</TextLink>
+               <TextLink href={`/primary-sorting/${id}`} variant="primary" size={'lg'} >Вторичная обработка ({process})</TextLink>
+            </div>
          </Header>
 
 
@@ -112,7 +115,8 @@ export default function Images() {
                   </div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{image.mime_type}</div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{image.width ? `${image.width} x ${image.height}` : "Не указано"}</div>
-                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url} <div>+ещё {image.locations.length - 1}</div></div>
+                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url}     {image.locations.length > 1 && <div>+ещё {image.locations.length - 1}</div>}</div>
+
 
                   <div className={`font-medium text-[13px] `}>
                      <Status status={image.status} />

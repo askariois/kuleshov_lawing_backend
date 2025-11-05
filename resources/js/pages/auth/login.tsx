@@ -96,7 +96,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                         <div className="text-center text-sm text-muted-foreground">
                             У вас нет аккаунта?
-                            <TextLink href={register()} tabIndex={5}>
+                            <TextLink href={register()} tabIndex={5} >
                                 Зарегистрироваться
                             </TextLink>
                         </div>

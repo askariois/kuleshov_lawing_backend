@@ -111,7 +111,7 @@ export default function CustomerRequest() {
                   </div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{image.mime_type}</div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{image.width ? `${image.width} x ${image.height}` : "Не указано"}</div>
-                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url} <div>+ещё {image.locations.length - 1}</div></div>
+                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url} {image.locations.length > 1 && <div>+ещё {image.locations.length - 1}</div>}</div>
 
                   <div className={`font-medium text-[13px] `}>
                      <Status status={image.status} />

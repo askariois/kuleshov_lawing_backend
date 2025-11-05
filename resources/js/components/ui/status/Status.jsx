@@ -15,7 +15,9 @@ function Status({ status, style }) {
           return <><div className="text-[#0AA947]">Обработано</div>
           <div className="text-[10px] text-[#7C7C7C] font-medium">Заменено</div></>;
       case "clent":
-          return <><div className="text-[#F59106]">В ТЗ</div></>;
+          return <><div className="text-[#F59106]">Запрос клиенту</div></>;
+       case "process":
+          return <><div className="text-[#F59106]">В процессе</div></>;
       default:
            return <><div className="text-[#E45454]">Необработанное</div></>;
     }

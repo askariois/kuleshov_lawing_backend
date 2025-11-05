@@ -68,8 +68,12 @@ export function AppSidebar() {
     }
 
     const onSelected = (value: string) => {
-        setSelectedProjectId(value || null);
-        localStorage.setItem('selectedProjectId', value || '');
+        const projectId = value || null;
+        setSelectedProjectId(projectId);
+        localStorage.setItem('selectedProjectId', projectId || '');
+
+        // РЕДИРЕКТ СРАЗУ ПОСЛЕ ВЫБОРА
+        window.location.href = `/projects`;
     }
 
     return (
@@ -133,6 +137,10 @@ export function AppSidebar() {
                     </div>
                 )}
             </SidebarContent>
+
+            <SidebarFooter>
+                <NavUser />
+            </SidebarFooter>
             <Toaster
                 position="top-right"
                 reverseOrder={false}
