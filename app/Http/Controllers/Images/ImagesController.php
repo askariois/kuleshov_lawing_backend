@@ -48,4 +48,24 @@ class ImagesController extends Controller
             'status' => $request->session()->get('status'),
         ]);
     }
+
+    function queue(Request $request, $id): Response
+    {
+        $images = Image::with('locations');
+        $images =   $images->where('project_id', $id)->where('status', 'queue')->paginate(15);
+        return Inertia::render('queue/queue', [
+            'images' =>   $images,
+            'status' => $request->session()->get('status'),
+        ]);
+    }
+
+    function single(Request $request,  $single): Response
+    {
+        $image =  Image::with('locations', 'duplicate')->find($single);
+
+        return Inertia::render('queue/single', [
+            'image' =>   $image,
+            'status' => $request->session()->get('status'),
+        ]);
+    }
 }

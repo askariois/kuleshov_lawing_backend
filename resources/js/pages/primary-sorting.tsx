@@ -60,7 +60,10 @@ export default function PrimarySorting() {
       <AppLayout>
          <Header title="Первичная сортировка" subtitle={`Всего: ${images.to ? images.to : 0} / ${images.total}`}>
          </Header>
-         <Sorting images={images} currentPage={currentPage} projectId={projectId} buttons={buttons()} />
-      </AppLayout >
+         {images.data.length > 0 && (
+            images.data.map((img) => {
+               return <Sorting img={img} images={images} currentPage={currentPage} projectId={projectId} buttons={buttons()} />
+            }))}
+      </AppLayout>
    )
 }

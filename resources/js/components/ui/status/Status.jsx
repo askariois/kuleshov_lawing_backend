@@ -20,6 +20,8 @@ function Status({ status, style }) {
           return <><div className="text-[#F59106]">В процессе</div></>;
        case "ToR":
           return <><div className="text-[#F59106]">В ТЗ</div></>;
+       case "queue":
+          return <><div className="text-[#3E95FB]">Очередь на генерацию</div></>;
       default:
            return <><div className="text-[#E45454]">Необработанное</div></>;
     }

@@ -1,12 +1,8 @@
-import Status from '@/components/ui/status/Status'
-import React from 'react'
 import { Button } from '@/components/ui/button';
-import CopyLink from '@/components/ui/copy-link/CopyLink';
 import AppLayout from '@/layouts/app-layout';
 import Header from '@/components/ui/header';
 import { router, usePage } from '@inertiajs/react';
 import toast from 'react-hot-toast';
-import TextLink from '@/components/text-link';
 import Sorting from '@/components/features/sorting/sorting';
 
 export default function PrimarySorting() {
@@ -37,12 +33,11 @@ export default function PrimarySorting() {
    const buttons = () => {
       return (<div className="mt-6 ">
          <div className="flex justify-between gap-1.5 mb-1.5">
-
             <Button variant="secondary" size={'full'} className='text-[18px] font-semibold' onClick={() => onImage('author')}>
                Авторское
             </Button>
-            <Button variant="primary" size={'full'} className='ml-6 text-[18px] font-semibold' onClick={() => onImage('ToR')}>
-               На обработку
+            <Button variant="primary" size={'full'} className='ml-6 text-[18px] font-semibold' onClick={() => onImage('queue')}>
+               На генерацию
             </Button>
          </div>
       </div>)
@@ -53,7 +48,10 @@ export default function PrimarySorting() {
       <AppLayout>
          <Header title="Вторичная обработка" subtitle={`Всего: ${images.to ? images.to : 0} / ${images.total}`}>
          </Header>
-         <Sorting images={images} currentPage={currentPage} projectId={projectId} buttons={buttons()} />
+         {images.data.length > 0 && (
+            images.data.map((img) => {
+               return <Sorting img={img} images={images} currentPage={currentPage} projectId={projectId} buttons={buttons()} />
+            }))}
       </AppLayout >
    )
 }
