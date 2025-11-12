@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import PhotoGenerate from '@/components/features/photo-generate/photo-generate';
 
 
-export default function QueueSingle() {
+export default function Single() {
    const { image, currentPage, errors: serverErrors } = usePage<Props>().props;
    const projectId = localStorage.getItem("selectedProjectId")
 

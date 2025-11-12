@@ -35,13 +35,18 @@ class SortController extends Controller
       $status = $request->input('status');
       $projectId = $request->input('project_id') ?? $request->route('id');
       $image = Image::findOrFail($id);
-
+      $returnTo = $request->input('return_to');
       if ($status == "process") {
          CheckImageDuplicates::dispatch($image);
       }
 
 
       Image::where('id', $id)->update(['status' => $status]);
+
+      // Если есть return_to — редиректим туда
+      if ($returnTo) {
+         return Inertia::location($returnTo);
+      }
       // Определяем следующую страницу
       $currentPage = $request->input('page', 1);
       $nextPage = $currentPage;

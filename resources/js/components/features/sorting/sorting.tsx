@@ -20,16 +20,22 @@ function Sorting({ img, images, projectId, buttons }) {
                   </div>
                   <div className="flex flex-col basis-1/2">
                      <div>
-                        <div className="mt-2 leading-[1.3]">
-                           <div className="text-[24px] font-bold flex items-baseline">
-                              {name}
-                              <span className="text-[16px] font-semibold text-[#7C7C7C]">
-                                 .{ext}
+                        <div className="mt-2 leading-[1.3] flex justify-between items-center w-full">
+                           <div>
+                              <div className="text-[24px] font-bold flex items-baseline">
+                                 {name}
+                                 <span className="text-[16px] font-semibold text-[#7C7C7C]">
+                                    .{ext}
+                                 </span>
+                              </div>{" "}
+                              <span className="font-medium text-[13px] text-[#7C7C7C] flex items-baseline">
+                                 {img.path} <CopyLink />
                               </span>
-                           </div>{" "}
-                           <span className="font-medium text-[13px] text-[#7C7C7C] flex items-baseline">
-                              {img.path} <CopyLink />
-                           </span>
+                           </div>
+
+
+                           <Status status={img.status} />
+
                         </div>
                         <div className="mt-4">
                            {img.locations.map(item => {
@@ -102,7 +108,6 @@ function Sorting({ img, images, projectId, buttons }) {
                      </div>
                   )}
                </div>}
-
 
 
                {buttons}

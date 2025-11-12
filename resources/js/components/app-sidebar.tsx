@@ -73,7 +73,7 @@ export function AppSidebar() {
         setSelectedProjectId(projectId);
         localStorage.setItem('selectedProjectId', projectId || '');
 
-        window.location.href = `/projects`;
+        window.location.href = `/images/${projectId}`;
     }
 
 
@@ -123,7 +123,6 @@ export function AppSidebar() {
                 {isProjectSelected && (
                     <>
                         <NavMain items={mainNavItems} />
-
                         <div className="mx-4 mt-4">
                             <Button type="button" variant="primary" size="lg" className="w-full" onClick={onScan}>
                                 Сканирование
@@ -147,6 +146,7 @@ export function AppSidebar() {
                 position="top-right"
                 reverseOrder={false}
             />
+
         </Sidebar>
     );
 }

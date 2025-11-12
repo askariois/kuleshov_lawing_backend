@@ -13,6 +13,8 @@ import CopyLink from '@/components/ui/copy-link/CopyLink';
 import Status from './../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
+import { Checkbox } from '@/components/ui/checkbox';
+
 
 // === Проект ===
 interface IImage {
@@ -54,12 +56,38 @@ interface Props extends PageProps {
 
 export default function Images() {
    const id = localStorage.getItem("selectedProjectId")
-   const { images, raw, process, errors: serverErrors } = usePage<Props>().props;
+   const { images, raw, process, mimeTypes, filters, errors: serverErrors } = usePage<Props>().props;
 
    const { data, setData, post, processing, errors } = useForm({
       name: '',
       url: 'https://', // Предзаполняем https://
    });
+
+
+   // Активные mime из URL
+   const activeMimes = filters.mime || [];
+
+   // Обработчик чекбокса
+   const handleMimeFilter = (mime: string, checked: boolean) => {
+      const newMimes = checked
+         ? [...activeMimes, mime]
+         : activeMimes.filter(m => m !== mime);
+
+      router.get(
+         `/images/${id}/`,
+         { mime_type: newMimes.length ? newMimes : null },
+         { preserveState: true, replace: true, only: ['images', 'filters'] }
+      );
+   };
+
+   const handleSearch = (search: string,) => {
+
+      router.get(
+         `/images/${id}/`,
+         { search: search },
+         { preserveState: true, replace: true, only: ['images', 'filters'] }
+      );
+   };
 
    return (
       <AppLayout>
@@ -70,7 +98,28 @@ export default function Images() {
             </div>
          </Header>
 
+         {/* Поиск */}
+         <div className="mb-6">
+            <Label htmlFor="search">Поиск</Label>
+            <input
+               type="search"
+               placeholder="Поиск..."
+               className="w-full rounded-md border border-gray-300 bg-[#F1F1F1] px-4 py-2 focus:border-blue-500 focus:outline-none"
+               onChange={(e) => handleSearch(e.target.value)}
+            />
 
+            <div className='flex gap-1'>
+
+               {mimeTypes.map((mimeType) => (
+                  <div key={mimeType.value} className='bg-[#F1F1F1] p-2 rounded-[8px] flex items-center mt-2 cursor-pointer '>
+                     <Checkbox className='bg-[#B1B1B1] cursor-pointer' id={`${mimeType.value}-checkbox`} onCheckedChange={(checked) => handleMimeFilter(mimeType.value, !!checked)} />
+                     <Label htmlFor={`${mimeType.value}-checkbox`} className="text-[12px] text-[#111111]  ml-[2px] cursor-pointer ">
+                        {mimeType.label}
+                     </Label>
+                  </div>
+               ))}
+            </div>
+         </div>
 
          {/* Таблица */}
          <div className="w-full mt-6 overflow-x-auto">
@@ -90,10 +139,9 @@ export default function Images() {
             </div>
 
             {images.data.length !== 0 && images.data.map((image) => {
-               console.log(image);
 
                return (<Link
-                  href={"/primary-sorting/2"}
+                  href={`/single/${image.id}`}
                   key={image.id}
                   className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2 hover:bg-[#F1F1F1] transition"
                   style={{

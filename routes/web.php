@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tor/{id}', [ImagesController::class, 'tor']);
 
     Route::get('/queue/{id}', [ImagesController::class, 'queue']);
-    Route::get('/queue/single/{single_id}', [ImagesController::class, 'single']);
+    Route::get('/single/{single_id}', [ImagesController::class, 'single']);
 
     Route::get('/primary-sorting/{id}', [SortController::class, 'sort'])->name('primary.sorting.index');;
     Route::post('/primary-sorting/{id}/sort', [SortController::class, 'storeSorting']);

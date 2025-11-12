@@ -1,7 +1,7 @@
 // resources/js/Pages/Projects/Index.tsx
 
 import AppLayout from '@/layouts/app-layout';
-import Header from '../../components/ui/header';
+import Header from '../components/ui/header';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useEffect, useRef, useState } from 'react';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import CopyLink from '@/components/ui/copy-link/CopyLink';
-import Status from '../../components/ui/status/Status';
+import Status from '../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
 
@@ -88,7 +88,7 @@ export default function Queue() {
             {images.data.length !== 0 && images.data.map((image) => {
 
                return (<Link
-                  href={`/queue/single/${image.id}`}
+                  href={`/single/${image.id}`}
                   key={image.id}
                   className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                   style={{
