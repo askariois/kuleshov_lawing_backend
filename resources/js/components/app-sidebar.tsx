@@ -24,24 +24,24 @@ import {
 } from './ui/select';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
-import 'dayjs/locale/ru'; // для русского
+import 'dayjs/locale/ru';
 
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
+dayjs.locale('ru');
 
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
-const mainNavItems: NavItem[] = [
-    { title: 'Изображения', href: '/images/' + localStorage.getItem("selectedProjectId"), border: true },
-    { title: 'ТЗ на замену', href: '/tor/' + localStorage.getItem("selectedProjectId"), },
-    { title: 'ГенерацияИЗО', href: '/queue/' + localStorage.getItem("selectedProjectId"), },
-    { title: 'Запрос заказчику', href: '/customer_request/' + localStorage.getItem("selectedProjectId"), border: true },
+const mainNavItems = (projectId: string | null): NavItem[] => [
+    { title: 'Изображения', href: `/images/${projectId}`, border: true },
+    { title: 'ТЗ на замену', href: `/tor/${projectId}` },
+    { title: 'ГенерацияИЗО', href: `/queue/${projectId}` },
+    { title: 'Запрос заказчику', href: `/customer_request/${projectId}`, border: true },
 ];
-
 
 interface ISidebarData {
     sidebar: {
@@ -51,31 +51,32 @@ interface ISidebarData {
 
 export function AppSidebar() {
     const { sidebar } = usePage<ISidebarData>().props;
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(localStorage.getItem('selectedProjectId') || null);
+    const [selectedProjectId, setSelectedProjectId] = useLocalStorage<string | null>('selectedProjectId', null);
 
-    // Определяем, выбран ли проект
     const isProjectSelected = selectedProjectId !== null;
 
     const onScan = () => {
-        router.post('/scan', { 'url': sidebar.projects.find(p => p.id == selectedProjectId)?.url, 'project_id': selectedProjectId }, {
-            onSuccess: () => {
-                toast.success('Сканирование запущено!')
+        const project = sidebar.projects.find(p => p.id === Number(selectedProjectId));
+        if (!project) return;
 
-            },
-            onError: (errors) => {
-                console.log('Ошибки валидации:', errors);
-            },
+        router.post('/scan', {
+            url: project.url,
+            project_id: selectedProjectId,
+        }, {
+            onSuccess: () => toast.success('Сканирование запущено!'),
+            onError: (errors) => console.log('Ошибки:', errors),
         });
-    }
+    };
 
     const onSelected = (value: string) => {
         const projectId = value || null;
         setSelectedProjectId(projectId);
-        localStorage.setItem('selectedProjectId', projectId || '');
 
-        window.location.href = `/images/${projectId}`;
-    }
-
+        // Редирект только если проект выбран
+        if (projectId) {
+            window.location.href = `/images/${projectId}`;
+        }
+    };
 
 
     return (
@@ -97,7 +98,7 @@ export function AppSidebar() {
                     </Label>
                     <Select
                         value={selectedProjectId || ''}
-                        onValueChange={(value) => onSelected(value)}
+                        onValueChange={onSelected}
                     >
                         <SelectTrigger
                             id="project-select"
@@ -119,10 +120,9 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {/* Показываем NavMain и кнопку ТОЛЬКО если проект выбран */}
                 {isProjectSelected && (
                     <>
-                        <NavMain items={mainNavItems} />
+                        <NavMain items={mainNavItems(selectedProjectId)} />
                         <div className="mx-4 mt-4">
                             <Button type="button" variant="primary" size="lg" className="w-full" onClick={onScan}>
                                 Сканирование
@@ -131,7 +131,6 @@ export function AppSidebar() {
                     </>
                 )}
 
-                {/* Опционально: placeholder, если ничего не выбрано */}
                 {!isProjectSelected && (
                     <div className="px-6 py-8 text-center text-sm text-[#7C7C7C]">
                         Выберите проект, чтобы продолжить
@@ -142,11 +141,8 @@ export function AppSidebar() {
             <SidebarFooter>
                 <NavUser />
             </SidebarFooter>
-            <Toaster
-                position="top-right"
-                reverseOrder={false}
-            />
 
+            <Toaster position="top-right" reverseOrder={false} />
         </Sidebar>
     );
 }

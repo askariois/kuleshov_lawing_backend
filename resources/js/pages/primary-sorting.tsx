@@ -7,18 +7,20 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 
 export default function PrimarySorting() {
-   const { images, currentPage, errors: serverErrors } = usePage<Props>().props;
-   const projectId = localStorage.getItem("selectedProjectId")
-
+   const { images, currentPage, filters, errors: serverErrors } = usePage<Props>().props;
+   const rawId = localStorage.getItem("selectedProjectId");
+   const projectId = rawId ? JSON.parse(rawId) : null;
    const onImage = (status: string) => {
-      router.post(`/primary-sorting/${images.data[0].id}/sort`, {
+      router.post(`/primary-sorting/${Number(images.data[0].id)}/sort`, {
          status,
          project_id: projectId,
-         page: currentPage, // ← передаём текущую страницу
+         page: currentPage,              // текущая страница
+         search: filters.search || '',   // текущий поиск
+         mime_type: filters.mime_type, // текущие MIME
       }, {
          preserveState: true,
          preserveScroll: true,
-         replace: true, // ← URL не добавляется в историю
+         replace: true, // URL не добавляется в историю
          onSuccess: () => {
             toast.success('Сортировка прошла успешно');
             // Бэкенд сам вернёт X-Inertia-Location → URL обновится
@@ -27,8 +29,6 @@ export default function PrimarySorting() {
             toast.error('Ошибка');
          },
       });
-
-
    };
 
    const buttons = () => {

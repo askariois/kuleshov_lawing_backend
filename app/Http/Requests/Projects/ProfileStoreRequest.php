@@ -26,7 +26,6 @@ class ProfileStoreRequest extends FormRequest
          'url.required' => 'Введите URL сайта',
          'url.url' => 'Введите корректный URL',
          'url.regex' => 'URL должен начинаться с https://',
-         'name.required' => 'Введите название проекта',
       ];
    }
 }

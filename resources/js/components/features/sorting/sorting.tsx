@@ -28,9 +28,9 @@ function Sorting({ img, images, projectId, buttons }) {
                                     .{ext}
                                  </span>
                               </div>{" "}
-                              <span className="font-medium text-[13px] text-[#7C7C7C] flex items-baseline">
+                              <a href={img.path} className="font-medium text-[13px] text-[#7C7C7C] flex items-baseline  hover:text-primary" target='_blank' rel="noreferrer">
                                  {img.path} <CopyLink />
-                              </span>
+                              </a>
                            </div>
 
 
@@ -39,9 +39,9 @@ function Sorting({ img, images, projectId, buttons }) {
                         </div>
                         <div className="mt-4">
                            {img.locations.map(item => {
-                              return <div className="flex items-baseline text-[15px] text-[#7C7C7C] font-medium">
+                              return <a href={item.url} className="flex items-baseline text-[15px] text-[#7C7C7C] font-medium  hover:text-primary" target='_blank' rel="noreferrer">
                                  {item.url} <CopyLink />
-                              </div>
+                              </a>
                            })}
                            {img.duplicate && (<div className='mt-7'>
                               <div className='text-[18px] font-bold'>Найденые совпадения <span className='text-[32px] text-[#E45454]'>  {img.duplicate.images_count}</span></div>

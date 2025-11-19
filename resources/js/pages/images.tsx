@@ -55,45 +55,72 @@ interface Props extends PageProps {
 
 
 export default function Images() {
-   const id = localStorage.getItem("selectedProjectId")
-   const { images, raw, process, mimeTypes, filters, errors: serverErrors } = usePage<Props>().props;
+   const rawId = localStorage.getItem("selectedProjectId");
+   const id = rawId ? rawId.replace(/^"|"$/g, '') : null;
+   const { images, raw_count, process, mimeTypes, filters, errors: serverErrors } = usePage<Props>().props;
+   const [selectedMimes, setSelectedMimes] = useState<string[]>([]);
+   // Полный список mime-значений
+   const allMimeValues = mimeTypes.map(m => m.value);
 
-   const { data, setData, post, processing, errors } = useForm({
-      name: '',
-      url: 'https://', // Предзаполняем https://
-   });
+   // Применение фильтра
+   const applyFilter = (mimes: string[]) => {
+      router.get(
+         `/images/${id}/`,
+         {
+            mime_type: mimes.length === allMimeValues.length ? null : mimes,
+         },
+         {
+            preserveState: true,
+            replace: true,
+            only: ['images', 'filters', 'raw_count'],
+         }
+      );
+   };
 
 
    // Активные mime из URL
-   const activeMimes = filters.mime || [];
+   useEffect(() => {
+      if (allMimeValues.length > 0 && selectedMimes.length === 0) {
+         setSelectedMimes(allMimeValues);
+         // Сразу применяем фильтр по всем
+         applyFilter(allMimeValues);
+      }
+   }, [allMimeValues]);
 
    // Обработчик чекбокса
    const handleMimeFilter = (mime: string, checked: boolean) => {
       const newMimes = checked
-         ? [...activeMimes, mime]
-         : activeMimes.filter(m => m !== mime);
+         ? [...selectedMimes, mime]
+         : selectedMimes.filter(m => m !== mime);
 
+      setSelectedMimes(newMimes);
+      applyFilter(newMimes);
+   };
+
+   const handleSearch = (search: string) => {
       router.get(
          `/images/${id}/`,
-         { mime_type: newMimes.length ? newMimes : null },
+         {
+            search: search || null,
+            mime_type: selectedMimes.length === allMimeValues.length ? null : selectedMimes,
+         },
          { preserveState: true, replace: true, only: ['images', 'filters'] }
       );
    };
 
-   const handleSearch = (search: string,) => {
 
-      router.get(
-         `/images/${id}/`,
-         { search: search },
-         { preserveState: true, replace: true, only: ['images', 'filters'] }
-      );
-   };
 
    return (
       <AppLayout>
          <Header title="Изображения" subtitle={`Всего: ${images.total}`}>
             <div className='gap-1 flex'>
-               <TextLink href={`/primary-sorting/${id}`} variant={raw > 0 ? "primary" : "secondary"} size={'lg'} disabled={raw > 0 ? false : true}>Первичная сортировка ({raw})</TextLink>
+               <TextLink onClick={(e) => {
+                  e.preventDefault();
+                  router.get(`/primary-sorting/${id}`, {
+                     search: '', // сюда current search из состояния, если есть
+                     mime_type: selectedMimes.length === allMimeValues.length ? null : selectedMimes,
+                  });
+               }} variant={raw_count > 0 ? "primary" : "secondary"} size={'lg'} disabled={raw_count > 0 ? false : true}>Первичная сортировка ({raw_count})</TextLink>
                <TextLink href={`/secondary-sorting/${id}`} variant={process > 0 ? "primary" : "secondary"} size={'lg'} disabled={process > 0 ? false : true}>Вторичная обработка ({process})</TextLink>
             </div>
          </Header>
@@ -108,16 +135,30 @@ export default function Images() {
                onChange={(e) => handleSearch(e.target.value)}
             />
 
-            <div className='flex gap-1'>
+            <div className='flex gap-1 mt-2'>
+               {mimeTypes.map((mimeType) => {
+                  const isChecked = selectedMimes.includes(mimeType.value);
 
-               {mimeTypes.map((mimeType) => (
-                  <div key={mimeType.value} className='bg-[#F1F1F1] p-2 rounded-[8px] flex items-center mt-2 cursor-pointer '>
-                     <Checkbox className='bg-[#B1B1B1] cursor-pointer' id={`${mimeType.value}-checkbox`} onCheckedChange={(checked) => handleMimeFilter(mimeType.value, !!checked)} />
-                     <Label htmlFor={`${mimeType.value}-checkbox`} className="text-[12px] text-[#111111]  ml-[2px] cursor-pointer ">
-                        {mimeType.label}
-                     </Label>
-                  </div>
-               ))}
+                  return (
+                     <div
+                        key={mimeType.value}
+                        className='bg-[#F1F1F1] p-2 rounded-[8px] flex items-center cursor-pointer'
+                     >
+                        <Checkbox
+                           className='bg-[#B1B1B1] cursor-pointer'
+                           id={`${mimeType.value}-checkbox`}
+                           checked={isChecked}
+                           onCheckedChange={(checked) => handleMimeFilter(mimeType.value, !!checked)}
+                        />
+                        <Label
+                           htmlFor={`${mimeType.value}-checkbox`}
+                           className="text-[12px] text-[#111111] ml-[2px] cursor-pointer"
+                        >
+                           {mimeType.label}
+                        </Label>
+                     </div>
+                  );
+               })}
             </div>
          </div>
 

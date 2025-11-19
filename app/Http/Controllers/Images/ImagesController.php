@@ -30,7 +30,7 @@ class ImagesController extends Controller
         // Пагинация с сохранением параметров
         $images = $query->paginate(15)->withQueryString();
 
-        $raw =   Image::with('locations')->where('project_id', $id)->where('status', 'raw')->count();
+        $raw_count = (clone $query)->where('status', 'raw')->count();
         $process =   Image::with('locations')->where('project_id', $id)->where('status', 'process')->count();
         $mimeTypes = Image::where('project_id', $id)
             ->whereNotNull('mime_type')
@@ -45,10 +45,12 @@ class ImagesController extends Controller
 
         return Inertia::render('images', [
             'images' =>   $images,
-            'raw' =>   $raw,
+            'raw_count' =>   $raw_count,
             'process' =>   $process,
             'mimeTypes' => $mimeTypes,
-            'filters' => $request->only(['mime']), // ← передаём активные фильтры
+            'filters' => [
+                'mime' => request('mime_type', []) // ← массив
+            ],
             'status' => $request->session()->get('status'),
         ]);
     }

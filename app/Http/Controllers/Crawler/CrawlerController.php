@@ -23,18 +23,18 @@ class CrawlerController extends Controller
          ->with('success', 'Сканирование запущено!');
    }
 
-      public function getProgress(Request $request)
+   public function getProgress(Request $request)
    {
       $projectId = $request->query('project_id');
-      $cacheKey = "crawler_progress_{$projectId}";
 
-      $progress = Cache::get($cacheKey, [
+      $cache = Cache::get("crawler_progress_{$projectId}", [
          'progress' => 0,
          'processed_pages' => 0,
          'total_pages' => 0,
-         'status' => 'pending'
+         'total_images' => 0,
+         'status' => 'idle'
       ]);
 
-      return response()->json($progress);
+      return response()->json($cache);
    }
 }

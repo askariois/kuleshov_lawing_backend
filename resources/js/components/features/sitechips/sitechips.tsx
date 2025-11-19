@@ -18,9 +18,9 @@ export default function SiteChips({ siteNameString }: SiteChipsProps) {
    return (
       <div className="flex flex-col gap-1.5 ">
          {sites.slice(0, 10).map((site, i) => (
-            <div key={i} variant="secondary" className="text-[15px] text-[#7C7C7C] font-medium flex items-center">
+            <a href={site} key={i} variant="secondary" className="text-[15px] text-[#7C7C7C] font-medium flex items-center hover:text-primary" target='_blank' rel="noreferrer">
                {site} <CopyLink />
-            </div>
+            </a>
          ))}
 
       </div>

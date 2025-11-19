@@ -16,16 +16,32 @@ class SortController extends Controller
    function sort($id, Request $request): Response
    {
       $page = $request->query('page', 1);
-
+      if (is_string($id)) {
+         $id = json_decode($id, true);
+      }
       $images = Image::with('locations')
          ->where('project_id', $id)
-         ->where('status', 'raw')
-         ->paginate(1, ['*'], 'page', $page);
+         ->where('status', 'raw');
+
+      if ($request->filled('search')) {
+         $images->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($request->input('search')) . '%']);
+      }
+
+      if ($request->has('mime_type') && is_array($request->input('mime_type'))) {
+         $images->whereIn('mime_type', $request->input('mime_type'));
+      }
+
+
+      $result = $images->paginate(1, ['*'], 'page', $page);
 
       return Inertia::render('primary-sorting', [
-         'images' => $images,
-         'currentPage' => $images->currentPage(),
+         'images' => $result,
+         'currentPage' => $result->currentPage(),
          'projectId' => $id,
+         'filters' => [
+            'search' => $request->input('search', ''),
+            'mime_type' => $request->input('mime_type', []),
+         ],
       ]);
    }
 
@@ -35,38 +51,51 @@ class SortController extends Controller
       $status = $request->input('status');
       $projectId = $request->input('project_id') ?? $request->route('id');
       $image = Image::findOrFail($id);
-      $returnTo = $request->input('return_to');
-      if ($status == "process") {
+
+      if ($status === 'process') {
          CheckImageDuplicates::dispatch($image);
       }
-
-
-      Image::where('id', $id)->update(['status' => $status]);
-
-      // Если есть return_to — редиректим туда
-      if ($returnTo) {
-         return Inertia::location($returnTo);
+      // Если пришло как JSON-строка, декодируем
+      if (is_string($projectId)) {
+         $projectId = json_decode($projectId, true);
       }
-      // Определяем следующую страницу
+      $image->update(['status' => $status]);
+
+      // --- Восстанавливаем фильтры ---
       $currentPage = $request->input('page', 1);
-      $nextPage = $currentPage;
+      $search = $request->input('search', null);
+      $mimeTypes = $request->input('mime_type', null);
 
-      $images = Image::with('locations')
+      $query = Image::with('locations')
          ->where('project_id', $projectId)
-         ->where('status', 'raw')
-         ->paginate(1, ['*'], 'page', $nextPage);
+         ->where('status', 'raw');
 
-      // Если пусто — переходим на страницу 1
-      if ($images->isEmpty() && $currentPage > 1) {
-         $nextPage = 1;
-         $images = Image::with('locations')
-            ->where('project_id', $projectId)
-            ->where('status', 'raw')
-            ->paginate(1, ['*'], 'page', $nextPage);
+      if ($search) {
+         $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
       }
 
+      if (is_array($mimeTypes)) {
+         $query->whereIn('mime_type', $mimeTypes);
+      }
 
-      return Inertia::location("/primary-sorting/{$projectId}?page={$nextPage}");
+      // Пагинация
+      $images = $query->paginate(1, ['*'], 'page', $currentPage);
+
+      // Если на текущей странице пусто — переходим на первую
+      if ($images->isEmpty() && $currentPage > 1) {
+         $currentPage = 1;
+         $images = $query->paginate(1, ['*'], 'page', $currentPage);
+      }
+
+      // Формируем URL с фильтрами и страницей
+      $queryParams = [];
+      if ($search) $queryParams['search'] = $search;
+      if ($mimeTypes) $queryParams['mime_type'] = $mimeTypes;
+      $queryParams['page'] = $currentPage;
+
+      $url = '/primary-sorting/' . $projectId . '?' . http_build_query($queryParams);
+
+      return Inertia::location($url);
    }
 
    function sort_secondary($id, Request $request): Response

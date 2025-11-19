@@ -15,6 +15,7 @@ import { local } from '@/routes/storage';
 import toast from 'react-hot-toast';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Checkbox } from '@radix-ui/react-checkbox';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 // === Проект ===
 interface Project {
@@ -60,15 +61,12 @@ interface ProgressData {
 }
 
 
-
-
 export default function Projects() {
     const [add, setAdd] = useState(false);
     const { projects, flash, errors: serverErrors } = usePage<Props>().props;
     const [progressMap, setProgressMap] = useState<Record<number, ProgressData>>({});
     const { confirm, ConfirmDialog } = useConfirm();
-
-
+    const [selectedProjectId, setSelectedProjectId] = useLocalStorage<string | null>('selectedProjectId', null);
 
     const { data, setData, post, processing, errors } = useForm({
         name: '',
@@ -89,6 +87,10 @@ export default function Projects() {
             },
         });
     };
+
+    useEffect(() => {
+        setSelectedProjectId(null);
+    }, []);
 
 
     useEffect(() => {
@@ -128,14 +130,10 @@ export default function Projects() {
 
     const onImage = (projectId: number) => {
         window.location.href = `/images/${projectId}`;
-        localStorage.setItem('selectedProjectId', projectId.toString());
+        setSelectedProjectId(projectId.toString());
     }
 
-
-
-
     const onScan = async (url, id) => {
-
         const agreed = await confirm({
             title: 'Вы уверены, что хотите запустить сканирование?',
             message: 'Это действие нельзя отменить.',
@@ -188,7 +186,7 @@ export default function Projects() {
                     className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                     style={{
                         gridTemplateColumns:
-                            "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 0.2fr)",
+                            "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
                     }}
                 >
                     <div className="font-semibold">URL</div>
@@ -210,7 +208,7 @@ export default function Projects() {
                         className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                         style={{
                             gridTemplateColumns:
-                                "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 0.2fr)",
+                                "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
                         }}
                     >
                         <div>
@@ -238,6 +236,16 @@ export default function Projects() {
                         <div className="text-[#7C7C7C] font-bold">{project.processed_images}</div>
                         <div className={`font-bold ${project.not_processed_images == 0 ? "text-[#0AA947]" : "text-[#E45454]"}`}>{project.not_processed_images}</div>
                         <div className="flex justify-center items-center gap-4">
+                            <Link href={`/logs/${project.id}`} className='hover:scale-110 transition-transform duration-200'>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12.666678428649902" height="13.333332061767578" viewBox="0 0 19 20" className='hover:fill-blue-500 cursor-pointer transition'>
+                                    <g transform="translate(3,2)" stroke="#B1B1B1" stroke-width="2" stroke-linecap="round">
+                                        <line x1="0" y1="0" x2="13" y2="0" />
+                                        <line x1="0" y1="4" x2="16" y2="4" />
+                                        <line x1="0" y1="8" x2="14" y2="8" />
+                                        <line x1="0" y1="12" x2="15" y2="12" />
+                                    </g>
+                                </svg>
+                            </Link>
                             <div>
                                 <svg width="13" height="14" viewBox="0 0 13 14" fill="none">
                                     <path
@@ -301,7 +309,7 @@ export default function Projects() {
             {/* Модалка */}
             <Modal show={add} onHide={onAdd} title="Новый проект">
                 <form onSubmit={onSubmit} className="space-y-4">
-                    <div>
+                    {/* <div>
                         <Label htmlFor="name">Название проекта</Label>
                         <Input
                             id="name"
@@ -312,7 +320,7 @@ export default function Projects() {
                             required
                         />
                         {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                    </div>
+                    </div> */}
 
                     <div>
                         <Label htmlFor="url">URL сайта</Label>
@@ -320,7 +328,7 @@ export default function Projects() {
                             id="url"
                             type="text"
                             value={data.url}
-                            onChange={(e) => setData('url', e.target.value)}
+                            onChange={(e) => setData({ 'url': e.target.value, 'name': e.target.value })}
                             placeholder="https://example.com"
                             required
                         />
