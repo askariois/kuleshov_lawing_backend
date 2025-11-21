@@ -59,12 +59,27 @@ export default function SingleDefault() {
                   <Button variant="secondary" size={'full'} className='text-[18px] font-semibold' onClick={() => onImage('author')}>
                      Авторское
                   </Button>
+                  <Button variant="secondary" size={'full'} className='ml-6 text-[18px] font-semibold' onClick={() => onImage('free')}>
+                     Бесплатное
+                  </Button>
+                  <Button variant="primary" size={'full'} className='ml-6 text-[18px] font-semibold' onClick={() => onImage('queue')}>
+                     На генерацию
+                  </Button>
+               </div>
+            </div>);
+         case 'clent':
+            return (<div className="mt-6 ">
+               <div className="flex justify-between gap-1.5 mb-1.5">
+                  <Button variant="secondary" size={'full'} className='text-[18px] font-semibold' onClick={() => onImage('author')}>
+                     Авторское
+                  </Button>
                   <Button variant="primary" size={'full'} className='ml-6 text-[18px] font-semibold' onClick={() => onImage('queue')}>
                      На генерацию
                   </Button>
                </div>
             </div>);
          default:
+
             return "";
       }
 

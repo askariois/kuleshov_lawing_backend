@@ -66,8 +66,6 @@ export default function Tor() {
          <Header title="ТЗ на замену" subtitle={`Всего: ${images.total}`}>
          </Header>
 
-
-
          {/* Таблица */}
          <div className="w-full mt-6 overflow-x-auto">
             <div

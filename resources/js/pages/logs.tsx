@@ -10,7 +10,6 @@ import dayjs from 'dayjs';
 
 export default function Logs() {
    const { logs, errors: serverErrors } = usePage<Props>().props;
-   console.log(logs);
 
    return (
       <AppLayout>

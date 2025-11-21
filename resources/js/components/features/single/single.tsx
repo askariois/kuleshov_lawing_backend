@@ -11,6 +11,7 @@ import PhotoGenerate from '@/components/features/photo-generate/photo-generate';
 import SinglDefault from './single-default/single-default';
 import { Props } from 'node_modules/@headlessui/react/dist/types';
 import SingleDefault from './single-default/single-default';
+import SingleQueue from './single-queue/single-queue';
 
 
 export default function Single() {
@@ -41,8 +42,11 @@ export default function Single() {
 
    const renderInfoTab = () => {
 
-      if (['author', 'design', 'raw', 'process'].includes(image.status)) {
+      if (['author', 'design', 'raw', 'process', 'clent'].includes(image.status)) {
          return <SingleDefault />;
+      }
+      if (['queue'].includes(image.status)) {
+         return <SingleQueue />;
       }
    }
 

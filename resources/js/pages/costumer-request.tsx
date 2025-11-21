@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useEffect, useRef, useState } from 'react';
 import Modal from '@/components/widget/modal/modal';
 import { Input } from '@/components/ui/input';
-import { router, useForm, usePage } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import CopyLink from '@/components/ui/copy-link/CopyLink';
 import Status from '../components/ui/status/Status';
@@ -87,7 +87,8 @@ export default function CustomerRequest() {
 
             {images.data.length !== 0 && images.data.map((image) => {
 
-               return (<div
+               return (<Link
+                  href={`/single/${image.id}`}
                   key={image.id}
                   className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                   style={{
@@ -117,7 +118,7 @@ export default function CustomerRequest() {
                      <Status status={image.status} />
                   </div>
 
-               </div>
+               </Link>
                )
             })}
 

@@ -37,7 +37,13 @@ dayjs.locale('ru');
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const mainNavItems = (projectId: string | null): NavItem[] => [
-    { title: 'Изображения', href: `/images/${projectId}`, border: true },
+    { title: 'Все изображения', href: `/images/${projectId}` },
+    { title: 'Бесплатное', href: `/images/${projectId}/?status=free` },
+    { title: 'Первичная ', href: `/images/${projectId}/?status=raw` },
+    { title: 'Вторичная ', href: `/images/${projectId}/?status=process`, border: true },
+
+
+
     { title: 'ТЗ на замену', href: `/tor/${projectId}` },
     { title: 'ГенерацияИЗО', href: `/queue/${projectId}` },
     { title: 'Запрос заказчику', href: `/customer_request/${projectId}`, border: true },

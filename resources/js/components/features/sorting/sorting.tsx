@@ -3,10 +3,19 @@ import CopyLink from '@/components/ui/copy-link/CopyLink';
 import TextLink from '@/components/text-link';
 import { router } from '@inertiajs/react';
 import SiteChips from '../sitechips/sitechips';
+import { useState } from 'react';
 
 
 function Sorting({ img, images, projectId, buttons }) {
    const [name, ext] = img.name.split(/\.(?=[^\.]+$)/);
+   const [showAllLocations, setShowAllLocations] = useState<Record<number, boolean>>({});
+   // Функция переключения
+   const toggleShowAll = (imageId: number) => {
+      setShowAllLocations(prev => ({
+         ...prev,
+         [imageId]: !prev[imageId],
+      }));
+   };
 
    return (
       <>
@@ -38,11 +47,34 @@ function Sorting({ img, images, projectId, buttons }) {
 
                         </div>
                         <div className="mt-4">
-                           {img.locations.map(item => {
-                              return <a href={item.url} className="flex items-baseline text-[15px] text-[#7C7C7C] font-medium  hover:text-primary" target='_blank' rel="noreferrer">
-                                 {item.url} <CopyLink />
-                              </a>
-                           })}
+                           {/* Показываем все или только первые 5 */}
+                           {img.locations
+                              .slice(0, showAllLocations[img.id] ? undefined : 5)
+                              .map((item, index) => (
+                                 <div key={index} className="flex items-center gap-2">
+                                    <a
+                                       href={item.url}
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       className="text-[15px] text-[#7C7C7C] font-medium hover:text-primary truncate block max-w-full"
+                                    >
+                                       {item.url}
+                                    </a>
+                                    <CopyLink text={item.url} />
+                                 </div>
+                              ))}
+
+                           {/* Кнопка "Показать ещё", если ссылок больше 5 */}
+                           {img.locations.length > 5 && (
+                              <button
+                                 onClick={() => toggleShowAll(img.id)}
+                                 className="text-[13px] font-medium text-primary hover:underline mt-1 cursor-pointer"
+                              >
+                                 {showAllLocations[img.id]
+                                    ? 'Свернуть'
+                                    : `+ ещё ${img.locations.length - 5}`}
+                              </button>
+                           )}
                            {img.duplicate && (<div className='mt-7'>
                               <div className='text-[18px] font-bold'>Найденые совпадения <span className='text-[32px] text-[#E45454]'>  {img.duplicate.images_count}</span></div>
                               <div className='text-[18px] font-bold'> Платные <span className='text-[32px] text-[#E45454]'>  {img.duplicate.stock_images_count}</span></div>

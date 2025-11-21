@@ -14,6 +14,7 @@ import Status from './../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
 import { Checkbox } from '@/components/ui/checkbox';
+import toast from 'react-hot-toast';
 
 
 // === Проект ===
@@ -67,6 +68,7 @@ export default function Images() {
       router.get(
          `/images/${id}/`,
          {
+            status: filters.status,
             mime_type: mimes.length === allMimeValues.length ? null : mimes,
          },
          {
@@ -97,6 +99,28 @@ export default function Images() {
       applyFilter(newMimes);
    };
 
+
+   const onImage = (status: string, id: string) => {
+      router.post(`/primary-sorting/${id}/sort`, {
+         status,
+         project_id: id,
+         return_to: `/images${id}/`,
+      }, {
+         preserveState: true,
+         preserveScroll: true,
+         replace: true, // ← URL не добавляется в историю
+         onSuccess: () => {
+            toast.success('Успешно отредактировали статус');
+            // Бэкенд сам вернёт X-Inertia-Location → URL обновится
+         },
+         onError: () => {
+            toast.error('Ошибка');
+         },
+      });
+
+
+   };
+
    const handleSearch = (search: string) => {
       router.get(
          `/images/${id}/`,
@@ -108,7 +132,60 @@ export default function Images() {
       );
    };
 
+   const [contextMenu, setContextMenu] = useState<ContextMenuPosition>({
+      x: 0,
+      y: 0,
+      image: null,
+   });
 
+   const menuRef = useRef<HTMLDivElement>(null);
+
+   // Закрытие меню при клике вне его
+   useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+         if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+            setContextMenu({ x: 0, y: 0, image: null });
+         }
+      };
+
+      if (contextMenu.image) {
+         document.addEventListener('click', handleClickOutside);
+         document.addEventListener('contextmenu', handleClickOutside);
+      }
+
+      return () => {
+         document.removeEventListener('click', handleClickOutside);
+         document.removeEventListener('contextmenu', handleClickOutside);
+      };
+   }, [contextMenu.image]);
+
+   // Обработчик правого клика по строке
+   const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>, image: IImage) => {
+      e.preventDefault(); // Отключаем стандартное меню
+      e.stopPropagation();
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX;
+      const y = e.clientY;
+
+      setContextMenu({
+         x,
+         y,
+         image,
+      });
+   };
+
+   // Действия в меню
+   const copyImageUrl = (path: string) => {
+      navigator.clipboard.writeText(path);
+      setContextMenu({ x: 0, y: 0, image: null });
+      // Можно добавить toast уведомление
+   };
+
+   const openInNewTab = (id: number) => {
+      window.open(`/single/${id}`, '_blank');
+      setContextMenu({ x: 0, y: 0, image: null });
+   };
 
    return (
       <AppLayout>
@@ -160,64 +237,109 @@ export default function Images() {
                   );
                })}
             </div>
-         </div>
 
-         {/* Таблица */}
-         <div className="w-full mt-6 overflow-x-auto">
-            <div
-               className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
-               style={{
-                  gridTemplateColumns:
-                     "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
-               }}
-            >
-               <div className="font-semibold">IMG</div>
-               <div className="font-semibold">Наименование</div>
-               <div className="font-semibold">Формат</div>
-               <div className="font-semibold">Размер</div>
-               <div className="font-semibold">Расположение</div>
-               <div className="font-semibold text-right">Статус</div>
-            </div>
-
-            {images.data.length !== 0 && images.data.map((image) => {
-
-               return (<Link
-                  href={`/single/${image.id}`}
-                  key={image.id}
-                  className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2 hover:bg-[#F1F1F1] transition"
+            {/* Таблица */}
+            <div className="w-full mt-6 overflow-x-auto">
+               <div
+                  className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                   style={{
                      gridTemplateColumns:
                         "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
                   }}
-
                >
-                  <div>
-                     <img
-                        src={image.path}
-                        alt={image.name}
-                        className="w-14 h-14 object-cover rounded-md border border-solid border-[#B1B1B1]/30"
-                     />
+                  <div className="font-semibold">IMG</div>
+                  <div className="font-semibold">Наименование</div>
+                  <div className="font-semibold">Формат</div>
+                  <div className="font-semibold">Размер</div>
+                  <div className="font-semibold">Расположение</div>
+                  <div className="font-semibold text-right">Статус</div>
+               </div>
+
+               {images.data.map((image) => (
+                  <div
+                     key={image.id}
+                     onContextMenu={(e) => handleContextMenu(e, image)}
+                     className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2 hover:bg-[#F1F1F1] transition cursor-pointer relative"
+                     style={{
+                        gridTemplateColumns:
+                           "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
+                     }}
+                  >
+                     {/* Обычный левый клик — переход */}
+                     <Link
+                        href={`/single/${image.id}`}
+                        className="contents" // Чтобы Link занимал всю строку, но не ломал grid
+                        onClick={(e) => e.button === 2 && e.preventDefault()} // Блокируем переход при правом клике
+                     >
+                        <div>
+                           <img src={image.path} alt={image.name} className="w-14 h-14 object-cover rounded-md border" />
+                        </div>
+                        <div className="space-y-1">
+                           <div className='text-[13px] font-medium'>{image.name}</div>
+                           <div className="text-[10px] text-[#7C7C7C] flex items-center">
+                              /wp-content/{image.name} <CopyLink />
+                           </div>
+                        </div>
+                        <div className="text-[#7C7C7C] text-[13px]">{image.mime_type}</div>
+                        <div className="text-[#7C7C7C] text-[13px]">
+                           {image.width ? `${image.width} x ${image.height}` : "—"}
+                        </div>
+                        <div className="text-[#7C7C7C] text-[13px]">
+                           {image.locations[0]?.url}
+                           {image.locations.length > 1 && <span className="block text-xs">+ещё {image.locations.length - 1}</span>}
+                        </div>
+                        <div className="text-right">
+                           <Status status={image.status} />
+                        </div>
+                     </Link>
                   </div>
-                  <div className="space-y-1">
-                     <div className='text-[13px] text-[#111111] font-medium'>{image.name}</div>
-                     <div className="text-[10px] font-medium text-[#7C7C7C] flex items-center">
-                        <div> /wp-content/{image.name}</div> <CopyLink />
-                     </div>
-                  </div>
-                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.mime_type}</div>
-                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.width ? `${image.width} x ${image.height}` : "Не указано"}</div>
-                  <div className="text-[#7C7C7C] font-medium text-[13px]">{image.locations[0].url}     {image.locations.length > 1 && <div>+ещё {image.locations.length - 1}</div>}</div>
+                  // ← Оберни Link в div с onContextMenu
+               ))}
+
+               <Pagination data={images} />
+            </div>
+
+            {/* === Кастомное контекстное меню === */}
+            {contextMenu.image && (
+               <div
+                  ref={menuRef}
+                  className="fixed z-[9999] bg-white rounded-lg shadow-xl border border-gray-200 py-2 min-w-[200px] text-sm"
+                  style={{
+                     top: contextMenu.y,
+                     left: contextMenu.x,
+                  }}
+               >
+
+                  <button
+                     onClick={() => copyImageUrl(contextMenu.image!.path)}
+                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 w-full text-left"
+                  >
+                     В ближайшее время появится фунции
+                  </button>
 
 
-                  <div className={`font-medium text-[13px] `}>
-                     <Status status={image.status} />
-                  </div>
 
-               </Link>
-               )
-            })}
+                  <hr className="my-2 border-gray-200" />
 
-            <Pagination data={images} />
+                  <button
+                     onClick={() => onImage('raw', contextMenu.image.id)}
+                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 w-full text-left text-blue-600"
+                  >
+                     Сменить статус
+                  </button>
+
+                  {/* Можно добавить удаление, смену статуса и т.д. */}
+               </div>
+            )}
+
+            {/* Наложение при открытом меню (опционально, для UX) */}
+            {contextMenu.image && (
+               <div
+                  className="fixed inset-0 z-[9998]"
+                  onContextMenu={(e) => e.preventDefault()}
+               />
+            )}
+
          </div>
 
       </AppLayout >

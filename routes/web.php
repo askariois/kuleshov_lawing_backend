@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Crawler\CrawlerController;
 use App\Http\Controllers\Crawler\CrawlerLogsController;
+use App\Http\Controllers\GenerateImageController\GenerateImageController;
 use App\Http\Controllers\Images\ImagesController;
 use App\Http\Controllers\Projects\ProjectsController;
 use App\Http\Controllers\Sort\SortController;
@@ -21,17 +22,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/progress', [CrawlerController::class, 'getProgress']);
 
     Route::get('/images/{id}', [ImagesController::class, 'index']);
+
+
     Route::get('/customer_request/{id}', [ImagesController::class, 'customer_request']);
     Route::get('/tor/{id}', [ImagesController::class, 'tor']);
 
     Route::get('/queue/{id}', [ImagesController::class, 'queue']);
     Route::get('/single/{single_id}', [ImagesController::class, 'single']);
 
-    Route::get('/primary-sorting/{id}', [SortController::class, 'sort'])->name('primary.sorting.index');;
+    Route::get('/primary-sorting/{id}', [SortController::class, 'sort'])->name('primary.sorting.index');
     Route::post('/primary-sorting/{id}/sort', [SortController::class, 'storeSorting']);
-    Route::get('/secondary-sorting/{id}', [SortController::class, 'sort_secondary'])->name('secondary.sorting.index');;
+    Route::get('/secondary-sorting/{id}', [SortController::class, 'sort_secondary'])->name('secondary.sorting.index');
 
-    Route::get('/logs/{id}', [CrawlerLogsController::class, 'index'])->name('logs.index');;
+    Route::get('/logs/{id}', [CrawlerLogsController::class, 'index'])->name('logs.index');
+
+
+
+    Route::post('/generate-img/{projectId}', [GenerateImageController::class, 'generate'])->name('logs.index');
 });
 
 require __DIR__ . '/settings.php';
