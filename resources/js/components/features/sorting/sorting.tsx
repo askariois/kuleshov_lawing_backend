@@ -76,7 +76,7 @@ function Sorting({ img, images, projectId, buttons }) {
                               </button>
                            )}
                            {img.duplicate && (<div className='mt-7'>
-                              <div className='text-[18px] font-bold'>Найденые совпадения <span className='text-[32px] text-[#E45454]'>  {img.duplicate.images_count}</span></div>
+                              <div className='text-[18px] font-bold'>Найденые совпадения <span className='text-[32px] text-primary'>  {img.duplicate.images_count}</span></div>
                               <div className='text-[18px] font-bold'> Платные <span className='text-[32px] text-[#E45454]'>  {img.duplicate.stock_images_count}</span></div>
                               <SiteChips siteNameString={img.duplicate?.site_name} />
                            </div>)}
@@ -104,12 +104,7 @@ function Sorting({ img, images, projectId, buttons }) {
                               <div className='ml-2'> Назад</div>
                            </div>
                         ) : (
-                           <div className='flex items-center text-[#7C7C7C] text-[13px] font-medium '>
-                              <svg width="5" height="9" viewBox="0 0 5 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                 <path d="M0.0965174 4.2994L3.96427 8.05006C4.20561 8.28409 4.66699 8.14223 4.66699 7.83399L4.66699 0.332675C4.66699 0.024436 4.20561 -0.117431 3.96427 0.116609L0.0965174 3.86727C-0.0317575 3.99157 -0.0316989 4.17509 0.0965174 4.2994Z" fill="#B1B1B1" />
-                              </svg>
-                              <div className='ml-2'> Назад</div>
-                           </div>
+                           <div></div>
                         )}
 
 
@@ -129,13 +124,7 @@ function Sorting({ img, images, projectId, buttons }) {
 
                            </div>
                         ) : (
-                           <div className='flex items-center text-[#7C7C7C] text-[13px] font-medium '>
-
-                              <div className='mr-2'> Вперед</div>
-                              <svg width="5" height="9" className='rotate-180' viewBox="0 0 5 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                 <path d="M0.0965174 4.2994L3.96427 8.05006C4.20561 8.28409 4.66699 8.14223 4.66699 7.83399L4.66699 0.332675C4.66699 0.024436 4.20561 -0.117431 3.96427 0.116609L0.0965174 3.86727C-0.0317575 3.99157 -0.0316989 4.17509 0.0965174 4.2994Z" fill="#B1B1B1" />
-                              </svg>
-                           </div>
+                           <div></div>
                         )}
                      </div>
                   )}
@@ -146,7 +135,7 @@ function Sorting({ img, images, projectId, buttons }) {
 
                <div className='w-full mt-9 flex'>
                   <TextLink href={`/images/${projectId}`} variant="primary" size={'lg'} className='ml-auto'>
-                     Завершить обработку
+                     Назад к списку
                   </TextLink>
                </div></>
          ) :

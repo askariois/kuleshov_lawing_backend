@@ -15,6 +15,27 @@ import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
 import { Checkbox } from '@/components/ui/checkbox';
 import toast from 'react-hot-toast';
+import { log } from 'console';
+import {
+   Sidebar,
+   SidebarContent,
+   SidebarFooter,
+   SidebarHeader,
+   SidebarMenu,
+   SidebarMenuButton,
+   SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import {
+   Select,
+   SelectContent,
+   SelectGroup,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from '@/components/ui/select';
+import { statusData } from '@/untils/status-data';
+import { useConfirm } from '@/hooks/useConfirm';
+import { cn } from '@/lib/utils';
 
 
 // === Проект ===
@@ -60,21 +81,31 @@ export default function Images() {
    const id = rawId ? rawId.replace(/^"|"$/g, '') : null;
    const { images, raw_count, process, mimeTypes, filters, errors: serverErrors } = usePage<Props>().props;
    const [selectedMimes, setSelectedMimes] = useState<string[]>([]);
+   const [selectedStatus, setSelectedStatus] = useState<string | null>(filters.status || '');
+   const { confirm, ConfirmDialog } = useConfirm();
+
+
    // Полный список mime-значений
    const allMimeValues = mimeTypes.map(m => m.value);
 
    // Применение фильтра
-   const applyFilter = (mimes: string[]) => {
+   // Универсальная функция применения фильтров
+   const applyFilters = (newStatus?: string, newMimes?: string[], search?: string) => {
+      const status = newStatus !== undefined ? newStatus : selectedStatus;
+      const mimes = newMimes !== undefined ? newMimes : selectedMimes;
+      const searchValue = search !== undefined ? search : filters.search;
+
       router.get(
          `/images/${id}/`,
          {
-            status: filters.status,
-            mime_type: mimes.length === allMimeValues.length ? null : mimes,
+            status: status || null,
+            mime_type: mimes.length === allMimeValues.length || mimes.length === 0 ? null : mimes,
+            search: searchValue || null,
          },
          {
             preserveState: true,
             replace: true,
-            only: ['images', 'filters', 'raw_count'],
+            only: ['images', 'filters', 'raw_count', 'process'],
          }
       );
    };
@@ -84,10 +115,12 @@ export default function Images() {
    useEffect(() => {
       if (allMimeValues.length > 0 && selectedMimes.length === 0) {
          setSelectedMimes(allMimeValues);
-         // Сразу применяем фильтр по всем
-         applyFilter(allMimeValues);
       }
-   }, [allMimeValues]);
+      // Устанавливаем начальный статус из URL или "all"
+      if (!selectedStatus && filters.status) {
+         setSelectedStatus(filters.status);
+      }
+   }, [allMimeValues, filters.status]);
 
    // Обработчик чекбокса
    const handleMimeFilter = (mime: string, checked: boolean) => {
@@ -96,40 +129,40 @@ export default function Images() {
          : selectedMimes.filter(m => m !== mime);
 
       setSelectedMimes(newMimes);
-      applyFilter(newMimes);
+      applyFilters(undefined, newMimes);
    };
 
 
-   const onImage = (status: string, id: string) => {
-      router.post(`/primary-sorting/${id}/sort`, {
-         status,
-         project_id: id,
-         return_to: `/images${id}/`,
-      }, {
-         preserveState: true,
-         preserveScroll: true,
-         replace: true, // ← URL не добавляется в историю
-         onSuccess: () => {
-            toast.success('Успешно отредактировали статус');
-            // Бэкенд сам вернёт X-Inertia-Location → URL обновится
-         },
-         onError: () => {
-            toast.error('Ошибка');
-         },
+   const onImage = async (status: string, image) => {
+      const agreed = await confirm({
+         title: 'Вы уверены, что хотите сменить статус?',
+         message: 'Это действие нельзя отменить.',
+         confirmText: 'Сменить статус',
+         cancelText: 'Отмена'
       });
-
+      if (agreed) {
+         router.post(`/primary-sorting/${image.id}/sort`, {
+            status,
+            project_id: id,
+            return_to: `/images/${image.project_id}/`,
+         }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true, // ← URL не добавляется в историю
+            onSuccess: () => {
+               toast.success('Успешно отредактировали статус');
+               // Бэкенд сам вернёт X-Inertia-Location → URL обновится
+            },
+            onError: () => {
+               toast.error('Ошибка');
+            },
+         });
+      }
 
    };
 
    const handleSearch = (search: string) => {
-      router.get(
-         `/images/${id}/`,
-         {
-            search: search || null,
-            mime_type: selectedMimes.length === allMimeValues.length ? null : selectedMimes,
-         },
-         { preserveState: true, replace: true, only: ['images', 'filters'] }
-      );
+      applyFilters(undefined, undefined, search);
    };
 
    const [contextMenu, setContextMenu] = useState<ContextMenuPosition>({
@@ -186,10 +219,17 @@ export default function Images() {
       window.open(`/single/${id}`, '_blank');
       setContextMenu({ x: 0, y: 0, image: null });
    };
+   const handleStatusChange = (value: string) => {
+      const newStatus = value === 'all' ? null : value;
+      setSelectedStatus(newStatus);
+      applyFilters(newStatus);
+   };
+
+
 
    return (
       <AppLayout>
-         <Header title="Изображения" subtitle={`Всего: ${images.total}`}>
+         <Header title="Все изображения" subtitle={`Всего: ${images.total}`}>
             <div className='gap-1 flex'>
                <TextLink onClick={(e) => {
                   e.preventDefault();
@@ -204,13 +244,42 @@ export default function Images() {
 
          {/* Поиск */}
          <div className="mb-6">
-            <Label htmlFor="search">Поиск</Label>
-            <input
-               type="search"
-               placeholder="Поиск..."
-               className="w-full rounded-md border border-gray-300 bg-[#F1F1F1] px-4 py-2 focus:border-blue-500 focus:outline-none"
-               onChange={(e) => handleSearch(e.target.value)}
-            />
+            <div className='flex items-center gap-3'>
+               <div className='w-[75%]'>
+                  <Label htmlFor="search">Поиск</Label>
+                  <input
+                     type="search"
+                     placeholder="Поиск..."
+                     className="w-full rounded-md border border-gray-300 bg-[#F1F1F1] px-4 py-2 focus:border-blue-500 focus:outline-none"
+                     onChange={(e) => handleSearch(e.target.value)}
+                  />
+               </div>
+               <div className='w-1/4'>
+                  <SidebarMenu >
+                     <Label htmlFor="project-select" >
+                        Статус
+                     </Label>
+                     <Select value={selectedStatus || 'all'} onValueChange={handleStatusChange}>
+                        <SelectTrigger
+                           id="project-select"
+                           className="w-full bg-[#F1F1F1] text-[#111111] cursor-pointer"
+                        >
+                           <SelectValue placeholder="Выберите проект" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#F1F1F1]">
+                           <SelectGroup>
+                              {statusData.map((item) => (
+                                 <SelectItem key={item.id} value={String(item.name)}>
+                                    {item.label}
+                                 </SelectItem>
+                              ))}
+                           </SelectGroup>
+                        </SelectContent>
+                     </Select>
+                  </SidebarMenu>
+               </div>
+            </div>
+
 
             <div className='flex gap-1 mt-2'>
                {mimeTypes.map((mimeType) => {
@@ -259,7 +328,13 @@ export default function Images() {
                   <div
                      key={image.id}
                      onContextMenu={(e) => handleContextMenu(e, image)}
-                     className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2 hover:bg-[#F1F1F1] transition cursor-pointer relative"
+                     className={cn(
+                        "grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2 transition cursor-pointer relative",
+                        // Подсветка при hover
+                        "hover:bg-[#F1F1F1]",
+                        // Подсветка, если это текущая строка с открытым меню
+                        contextMenu.image?.id === image.id && "bg-[#F1F1F1]"
+                     )}
                      style={{
                         gridTemplateColumns:
                            "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
@@ -322,7 +397,7 @@ export default function Images() {
                   <hr className="my-2 border-gray-200" />
 
                   <button
-                     onClick={() => onImage('raw', contextMenu.image.id)}
+                     onClick={() => onImage('raw', contextMenu.image)}
                      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 w-full text-left text-blue-600"
                   >
                      Сменить статус
@@ -341,7 +416,7 @@ export default function Images() {
             )}
 
          </div>
-
+         <ConfirmDialog />
       </AppLayout >
    );
 }

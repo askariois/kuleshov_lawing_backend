@@ -33,9 +33,10 @@ class SortController extends Controller
 
 
       $result = $images->paginate(1, ['*'], 'page', $page);
-
+      $currentImageId = $result->count() > 0 ? $result->first()->id : null;
       return Inertia::render('primary-sorting', [
          'images' => $result,
+         'currentImageId' => $currentImageId,
          'currentPage' => $result->currentPage(),
          'projectId' => $id,
          'filters' => [
@@ -60,7 +61,7 @@ class SortController extends Controller
          $projectId = json_decode($projectId, true);
       }
       $image->update(['status' => $status]);
-
+      $returnTo = $request->input('return_to', 'primary'); // по умолчанию — первичная
       // --- Восстанавливаем фильтры ---
       $currentPage = $request->input('page', 1);
       $search = $request->input('search', null);
@@ -93,9 +94,8 @@ class SortController extends Controller
       if ($mimeTypes) $queryParams['mime_type'] = $mimeTypes;
       $queryParams['page'] = $currentPage;
 
-      $url = '/primary-sorting/' . $projectId . '?' . http_build_query($queryParams);
 
-      return Inertia::location($url);
+      return Inertia::location($returnTo);
    }
 
    function sort_secondary($id, Request $request): Response
@@ -107,10 +107,24 @@ class SortController extends Controller
          ->where('status', 'process')
          ->paginate(1, ['*'], 'page', $page);
 
+
+      if ($request->filled('search')) {
+         $images->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($request->input('search')) . '%']);
+      }
+
+      if ($request->has('mime_type') && is_array($request->input('mime_type'))) {
+         $images->whereIn('mime_type', $request->input('mime_type'));
+      }
+
+
       return Inertia::render('secondary-sorting', [
          'images' => $images,
          'currentPage' => $images->currentPage(),
          'projectId' => $id,
+         'filters' => [
+            'search' => $request->input('search', ''),
+            'mime_type' => $request->input('mime_type', []),
+         ],
       ]);
    }
 }

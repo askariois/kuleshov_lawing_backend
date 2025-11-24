@@ -25,19 +25,22 @@ class CheckImageDuplicates implements ShouldQueue
 
     public function handle(): void
     {
+        $key = app()->environment('local', 'testing')
+            ?  "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^"
+            : config('services.tineye.api_key');
+
+
+        $imageUrl = app()->environment('local', 'testing')
+            ? 'https://api.tineye.com/rest/docs/img/meloncat.jpg'
+            : $this->image->path;
 
         try {
             $response = Http::withHeaders([
-                'x-api-key' => config('services.tineye.api_key'),
+                'x-api-key' => $key,
             ])->timeout(60)->get('https://api.tineye.com/rest/search/', [
-                'image_url' =>  $this->image->path,
+                'image_url' =>   $imageUrl
             ]);
 
-            // $response = Http::withHeaders([
-            //     'x-api-key' => "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^",
-            // ])->timeout(60)->get('https://api.tineye.com/rest/search/', [
-            //     'image_url' => "https://api.tineye.com/rest/docs/img/meloncat.jpg",
-            // ]);
             Log::info("Дубликат {$response->successful()}");
             if ($response->successful()) {
                 $data = $response->json();

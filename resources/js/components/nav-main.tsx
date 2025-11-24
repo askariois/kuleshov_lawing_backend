@@ -32,20 +32,38 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
     // Проверяем, активен ли пункт
     const isActive = (href: NavItem['href']): boolean => {
-        const itemPath = getHref(href);
-        if (!itemPath) return false;
+        const itemHref = getHref(href);
+        if (!itemHref) return false;
 
-        // Точное совпадение
-        if (currentPath === itemPath) return true;
-
-        // Поддержка вложенных маршрутов: если текущий путь начинается с itemPath и itemPath не корневой
-        if (itemPath !== '/' && currentPath.startsWith(itemPath)) {
-            // Дополнительно: если после itemPath идёт слеш или конец строки — считаем активным
-            const afterMatch = currentPath.substring(itemPath.length);
-            return afterMatch === '' || afterMatch.startsWith('/');
+        let currentUrl: URL;
+        try {
+            currentUrl = new URL(url, window.location.origin);
+        } catch {
+            return false;
         }
 
-        return false;
+        let itemUrl: URL;
+        try {
+            itemUrl = new URL(itemHref, window.location.origin);
+        } catch {
+            return false;
+        }
+
+        // 1. Сравниваем pathname
+        if (currentUrl.pathname !== itemUrl.pathname) return false;
+
+        // 2. Если в меню нет query-параметров — считаем активным любой URL с этим pathname
+        if (!itemUrl.search) return true;
+
+        // 3. Если есть query-параметры — проверяем, совпадают ли все параметры из меню
+        // (мы не требуем, чтобы были только эти параметры — могут быть дополнительные, например, page=2)
+        for (const [key, value] of itemUrl.searchParams.entries()) {
+            if (currentUrl.searchParams.get(key) !== value) {
+                return false;
+            }
+        }
+
+        return true;
     };
 
     return (

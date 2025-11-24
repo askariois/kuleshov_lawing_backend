@@ -28,7 +28,7 @@ class ProjectsController extends Controller
             'images as not_processed_images' => function ($query) {
                 $query->where('status',  'raw');
             },
-        ])->paginate(15);
+        ])->paginate(30);
 
 
         return Inertia::render('projects', [

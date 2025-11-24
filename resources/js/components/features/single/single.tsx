@@ -16,30 +16,6 @@ import SingleQueue from './single-queue/single-queue';
 
 export default function Single() {
    const { image, currentPage, errors: serverErrors } = usePage<Props>().props;
-
-   const [activeTab, setActiveTab] = useState<'generate' | 'info'>('generate');
-
-   const onImage = (status: string) => {
-      router.post(`/primary-sorting/${images.data[0].id}/sort`, {
-         status,
-         project_id: projectId,
-         page: currentPage, // ← передаём текущую страницу
-      }, {
-         preserveState: true,
-         preserveScroll: true,
-         replace: true, // ← URL не добавляется в историю
-         onSuccess: () => {
-            toast.success('Сортировка прошла успешно');
-            // Бэкенд сам вернёт X-Inertia-Location → URL обновится
-         },
-         onError: () => {
-            toast.error('Ошибка');
-         },
-      });
-
-
-   };
-
    const renderInfoTab = () => {
 
       if (['author', 'design', 'raw', 'process', 'clent'].includes(image.status)) {
