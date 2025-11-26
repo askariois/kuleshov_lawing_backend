@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Checkbox } from '@radix-ui/react-checkbox';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import ProjectModals from '@/components/features/modals/project-modals';
 
 // === Проект ===
 interface Project {
@@ -29,6 +30,7 @@ interface Project {
     format_images: string;
     autoscan: boolean;
     time_autoscan: string | null;
+    subdomains?: Project[]; // ← добавляем поддомены
 }
 
 // === Пагинатор (Laravel) ===
@@ -63,16 +65,17 @@ interface ProgressData {
 
 export default function Projects() {
     const [add, setAdd] = useState(false);
+    const [setting, setSetting] = useState(false);
     const { projects, flash, errors: serverErrors } = usePage<Props>().props;
     const [progressMap, setProgressMap] = useState<Record<number, ProgressData>>({});
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const { confirm, ConfirmDialog } = useConfirm();
-    const [selectedProjectId, setSelectedProjectId] = useLocalStorage<string | null>('selectedProjectId', null);
 
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         url: 'https://', // Предзаполняем https://
+        return_url: "/projects"
     });
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const onAdd = () => setAdd(!add);
 
     const onSubmit = (e: React.FormEvent) => {
@@ -88,9 +91,6 @@ export default function Projects() {
         });
     };
 
-    useEffect(() => {
-        setSelectedProjectId(null);
-    }, []);
 
 
     useEffect(() => {
@@ -130,7 +130,6 @@ export default function Projects() {
 
     const onImage = (projectId: number) => {
         window.location.href = `/images/${projectId}`;
-        setSelectedProjectId(projectId.toString());
     }
 
     const onScan = async (url, id) => {
@@ -152,6 +151,11 @@ export default function Projects() {
         }
 
     }
+
+    const openSettings = (project: Project) => {
+        setSelectedProject(project);
+        setSetting(true);
+    };
 
 
     return (
@@ -186,11 +190,12 @@ export default function Projects() {
                     className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                     style={{
                         gridTemplateColumns:
-                            "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
+                            "minmax(160px, 2fr) minmax(120px, 2fr)  minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
                     }}
                 >
                     <div className="font-semibold">URL</div>
                     <div className="font-semibold">Процесс сканирования</div>
+                    <div className="font-semibold">Кол-во поддоменов</div>
                     <div className="font-semibold">Посл. сканирование</div>
                     <div className="font-semibold">Всего изобр.</div>
                     <div className="font-semibold">Обработанно</div>
@@ -208,7 +213,7 @@ export default function Projects() {
                         className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                         style={{
                             gridTemplateColumns:
-                                "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
+                                "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
                         }}
                     >
                         <div>
@@ -231,6 +236,12 @@ export default function Projects() {
                                 {!isRunning && !isCompleted && '—'}
                             </div>
                         </div>
+                        <div className={`${project.subdomains_count > 0 ? "text-primary" : "text-[#7C7C7C]"} font-bold`}>
+
+                            {project.subdomains_count > 0 ? <Link href={`/subdomains/${project.id}`}>{project.subdomains_count}</Link> : <div>{project.subdomains_count}</div>}
+
+                        </div>
+
                         <div className="text-[#7C7C7C] font-bold">{project.last_scan ? dayjs(project.last_scan).format('DD.MM.YYYY  HH:mm') : '—'}</div>
                         <div className="text-[#7C7C7C] font-bold">{project.images_count}</div>
                         <div className="text-[#7C7C7C] font-bold">{project.processed_images}</div>
@@ -246,7 +257,7 @@ export default function Projects() {
                                     </g>
                                 </svg>
                             </Link>
-                            <div>
+                            <div onClick={() => openSettings(project)} className='cursor-pointer'>
                                 <svg width="13" height="14" viewBox="0 0 13 14" fill="none">
                                     <path
                                         fillRule="evenodd"
@@ -309,18 +320,6 @@ export default function Projects() {
             {/* Модалка */}
             <Modal show={add} onHide={onAdd} title="Новый проект">
                 <form onSubmit={onSubmit} className="space-y-4">
-                    {/* <div>
-                        <Label htmlFor="name">Название проекта</Label>
-                        <Input
-                            id="name"
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            placeholder="Мой сайт"
-                            required
-                        />
-                        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                    </div> */}
 
                     <div>
                         <Label htmlFor="url">URL сайта</Label>
@@ -342,6 +341,14 @@ export default function Projects() {
                     </Button>
                 </form>
             </Modal>
+            {/*  */}
+
+            {/* Модалка */}
+
+            {selectedProject && <ProjectModals toogle={setting} setToogle={() => openSettings()} project_parent={selectedProject} />}
+            {/*  */}
+
+
             <ConfirmDialog />
 
         </AppLayout>

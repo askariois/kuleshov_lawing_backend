@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Image;
 use App\Models\ImageDuplicate;
+use App\Models\DuplicateSource;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,9 +17,9 @@ class CheckImageDuplicates implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public  $image;
+    public $image;
 
-    public function __construct($image)
+    public function __construct(Image $image)
     {
         $this->image = $image;
     }
@@ -26,9 +27,8 @@ class CheckImageDuplicates implements ShouldQueue
     public function handle(): void
     {
         $key = app()->environment('local', 'testing')
-            ?  "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^"
+            ? "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^"
             : config('services.tineye.api_key');
-
 
         $imageUrl = app()->environment('local', 'testing')
             ? 'https://api.tineye.com/rest/docs/img/meloncat.jpg'
@@ -38,42 +38,66 @@ class CheckImageDuplicates implements ShouldQueue
             $response = Http::withHeaders([
                 'x-api-key' => $key,
             ])->timeout(60)->get('https://api.tineye.com/rest/search/', [
-                'image_url' =>   $imageUrl
+                'image_url' => $imageUrl,
+                'tags' => 'stock'
             ]);
 
-            Log::info("Дубликат {$response->successful()}");
-            if ($response->successful()) {
-                $data = $response->json();
-                $matches = $data['results']['matches'] ?? [];
-                $images_count = $data['stats']['total_results'] ?? 0;
-                $stock_images_count = $data['stats']['total_stock'] ?? 0;
+            if (!$response->successful()) {
+                Log::warning('TinEye API не вернул 200', [
+                    'image_id' => $this->image->id,
+                    'status' => $response->status(),
+                ]);
+                return;
+            }
 
-                $domains = collect($matches)
-                    ->pluck('domain')
-                    ->filter()
-                    ->unique()
-                    ->take(10)
-                    ->implode(', ');
+            $data = $response->json();
+            $matches = $data['results']['matches'] ?? [];
+            $images_count = $data['stats']['total_results'] ?? 0;
+            $stock_images_count = $data['stats']['total_stock'] ?? 0;
 
-                ImageDuplicate::updateOrCreate(
-                    ['image_id' => $this->image->id], // уникально по image_id
+            // 1. Создаём или обновляем запись дубликатов
+            $imageDuplicate = ImageDuplicate::updateOrCreate(
+                ['image_id' => $this->image->id],
+                [
+                    'images_count'       => $images_count,
+                    'stock_images_count' => $stock_images_count,
+                    'checked_at'         => now(),
+                ]
+            );
+
+
+
+            // 3. Проходим по всем найденным матчам
+            foreach ($matches as $match) {
+                $domain = $match['domain'] ?? null;
+                $backlink = $match['backlinks'][0]['url'] ?? null; // первый URL
+                $isPaid = $match['tags'][0] == "stock";
+
+                if (!$domain || !$backlink) {
+                    continue;
+                }
+
+                // Приводим к чистому домену (shutterstock.com, не www.shutterstock.com)
+                $cleanDomain = strtolower(preg_replace('/^www\./', '', parse_url($domain, PHP_URL_HOST) ?: $domain));
+
+                // 4. Находим или создаём источник
+                DuplicateSource::create(
                     [
-                        'site_name'           => $domains ?: 'Нет дублей',
-                        'images_count'        =>  $images_count,
-                        'stock_images_count'  =>  $stock_images_count, // если нужно — посчитай отдельно
-                        'checked_at'          => now(),
+                        'domain' => $cleanDomain,
+                        'image_duplicates_id' =>  $imageDuplicate->id,
+                        'url' =>   $backlink,
+                        'is_paid' => $isPaid ?? false,
                     ]
                 );
-            } else {
-                Log::warning('TinEye API не вернул 200', [
-                    'image_id' =>  $this->image->id,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
             }
+
+            Log::info("Дубликаты обработаны для изображения {$this->image->id}", [
+                'found' => count($matches),
+                'sources_attached' => $imageDuplicate->sources()->count(),
+            ]);
         } catch (\Exception $e) {
             Log::error('TinEye API error', [
-                'image_id' =>  $this->image->id,
+                'image_id' => $this->image->id,
                 'error' => $e->getMessage(),
             ]);
         }

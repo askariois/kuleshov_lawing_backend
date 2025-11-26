@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('duplicate_sources', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('dublicate_id')->constrained()->cascadeOnDelete();
-            $table->string('domain');           // например: shutterstock.com
-            $table->string('name');             // Shutterstock
-            $table->boolean('is_paid')->nullable();  // платный или бесплатный
+            $table->foreignId('image_duplicates_id')
+                ->constrained('image_duplicates')
+                ->onDelete('cascade');
+            $table->string('domain');
+            $table->string('url');
+            $table->boolean('is_paid')->default(false);
             $table->timestamps();
-            $table->unique('domain');
         });
     }
 

@@ -18,6 +18,11 @@ Route::get('/verification', [ImagesController::class, 'verification']);
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('projects', ProjectsController::class);
+    Route::get('/subdomains/{id}', [ProjectsController::class, 'subdomains']);
+
+
+
+
     Route::post('/scan', [CrawlerController::class, 'startScan']);
     Route::get('/progress', [CrawlerController::class, 'getProgress']);
 

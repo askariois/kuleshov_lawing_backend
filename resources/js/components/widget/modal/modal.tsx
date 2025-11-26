@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 export interface IModal {
   show: boolean;
   title: string;
+  subtitle?: string;
   onHide: () => void; // Функция без аргументов, возвращает void
   className?: string; // Опционально, как в предыдущих компонентах
   children: React.ReactNode; // Для React-компонентов или элементов
 }
 
 
-const Modal: React.FC<IModal> = ({ show, onHide, className, children, title }) => {
+const Modal: React.FC<IModal> = ({ show, onHide, className, children, title, subtitle }) => {
   return (
     <AnimatePresence>
       {show && (
@@ -32,7 +33,10 @@ const Modal: React.FC<IModal> = ({ show, onHide, className, children, title }) =
             onClick={(e) => e.stopPropagation()}
           >
             <div className='flex justify-between items-center border-b-[1px] border-solid border-[#E5E5E5] pb-3 mb-4'>
-              <h1 className='font-bold text-[#111111] text-[18px] w-full'>{title}</h1>
+              <div>
+                <h1 className='font-bold text-[#111111] text-[18px] w-full'>{title}</h1>
+                <div className='font-medium text-[#7C7C7C] text-[13px] w-full'>{subtitle}</div>
+              </div>
               <button
                 className="flex   justify-center  items-center font-extrabold  rounded-[3px] z-10 w-[13px] h-[13px] text-[6px]  cursor-pointer bg-[#B1B1B1] text-white"
                 onClick={onHide}

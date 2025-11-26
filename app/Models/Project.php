@@ -20,6 +20,7 @@ class Project extends Model
         'format_images',
         'autoscan',
         'time_autoscan',
+        'parent_id'
     ];
 
     protected $casts = [
@@ -30,5 +31,10 @@ class Project extends Model
     public function images()
     {
         return $this->hasMany(Image::class);
+    }
+
+    public function subdomains()
+    {
+        return $this->hasMany(Project::class, 'parent_id');
     }
 }

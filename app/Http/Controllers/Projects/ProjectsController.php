@@ -18,17 +18,18 @@ class ProjectsController extends Controller
      */
     public function index(Request $request): Response
     {
-        $projects = Project::withCount([
+        $projects = Project::with('subdomains')->withCount([
+            'subdomains as subdomains_count',
             'images as images_count' => function ($query) {
                 $query;
             },
             'images as processed_images' => function ($query) {
-                $query->whereIn('status', ['design', 'author', 'replaced']);
+                $query->where('status', "!=", 'raw');
             },
             'images as not_processed_images' => function ($query) {
                 $query->where('status',  'raw');
             },
-        ])->paginate(30);
+        ])->whereNull('parent_id')->paginate(30);
 
 
         return Inertia::render('projects', [
@@ -38,14 +39,40 @@ class ProjectsController extends Controller
     }
 
 
+    public function subdomains(Request $request, $id): Response
+    {
+        $projects = Project::with('subdomains')->withCount([
+            'images as images_count' => function ($query) {
+                $query;
+            },
+            'images as processed_images' => function ($query) {
+                $query->where('status', "!=", 'raw');
+            },
+            'images as not_processed_images' => function ($query) {
+                $query->where('status',  'raw');
+            },
+        ])->where('parent_id', $id)->paginate(30);
+
+
+        $parent_project =  Project::with('subdomains')->whereNull('parent_id')->find($projects->first()->parent_id);
+
+
+        return Inertia::render('subdomains', [
+            'projects' =>   $projects,
+            'project_parent' =>  $parent_project,
+            'status' => $request->session()->get('status'),
+        ]);
+    }
+
+
+
     public function store(ProfileStoreRequest $request): RedirectResponse
     {
         $data = $request->validated();
-
+        $redirectTo = $request->return_url;
         Project::create($data);
 
-        return redirect()
-            ->route('projects.index')
+        return redirect($redirectTo)
             ->with('success', 'Проект успешно создан!');
     }
 

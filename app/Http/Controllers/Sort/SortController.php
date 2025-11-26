@@ -102,7 +102,7 @@ class SortController extends Controller
    {
       $page = $request->query('page', 1);
 
-      $images = Image::with('locations', 'duplicate')
+      $images = Image::with('locations', 'duplicate', 'duplicate.sources')
          ->where('project_id', $id)
          ->where('status', 'process')
          ->paginate(1, ['*'], 'page', $page);

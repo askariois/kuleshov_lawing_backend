@@ -4,6 +4,7 @@ import TextLink from '@/components/text-link';
 import { router } from '@inertiajs/react';
 import SiteChips from '../sitechips/sitechips';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 
 function Sorting({ img, images, projectId, buttons }) {
@@ -16,6 +17,7 @@ function Sorting({ img, images, projectId, buttons }) {
          [imageId]: !prev[imageId],
       }));
    };
+   console.log(img);
 
    return (
       <>
@@ -75,11 +77,41 @@ function Sorting({ img, images, projectId, buttons }) {
                                     : `+ ещё ${img.locations.length - 5}`}
                               </button>
                            )}
-                           {img.duplicate && (<div className='mt-7'>
-                              <div className='text-[18px] font-bold'>Найденые совпадения <span className='text-[32px] text-primary'>  {img.duplicate.images_count}</span></div>
-                              <div className='text-[18px] font-bold'> Платные <span className='text-[32px] text-[#E45454]'>  {img.duplicate.stock_images_count}</span></div>
-                              <SiteChips siteNameString={img.duplicate?.site_name} />
-                           </div>)}
+                           {img.duplicate && (
+                              <div className='mt-7'>
+                                 <div className='text-[18px] font-bold'>
+                                    Найденные совпадения <span className='text-[32px] text-primary'>{img.duplicate.images_count}</span>
+                                 </div>
+                                 <div className='text-[18px] font-bold'>
+                                    Платные <span className='text-[32px] text-[#E45454]'>{img.duplicate.stock_images_count}</span>
+                                 </div>
+
+                                 {/* Новый красивый вывод дублей */}
+                                 {img.duplicate.sources && img.duplicate.sources.length > 0 ? (
+                                    <div className="mt-4 space-y-2">
+                                       {img.duplicate.sources.map((source) => (
+                                          <a
+                                             key={source.id}
+                                             href={source.url}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className={cn(
+                                                "flex items-center gap-2  text-sm font-semibold transition-all",
+                                                source.is_paid
+                                                   ? " text-red-700 hover:text-blue-700"
+                                                   : "bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200"
+                                             )}
+                                          >
+                                             <span>{source.domain}</span>
+
+                                          </a>
+                                       ))}
+                                    </div>
+                                 ) : (
+                                    <div className="text-gray-500 text-sm mt-2">Дубли не найдены</div>
+                                 )}
+                              </div>
+                           )}
 
                         </div>
                      </div>

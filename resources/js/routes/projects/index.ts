@@ -157,7 +157,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::store
- * @see app/Http/Controllers/Projects/ProjectsController.php:41
+ * @see app/Http/Controllers/Projects/ProjectsController.php:69
  * @route '/projects'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::store
- * @see app/Http/Controllers/Projects/ProjectsController.php:41
+ * @see app/Http/Controllers/Projects/ProjectsController.php:69
  * @route '/projects'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::store
- * @see app/Http/Controllers/Projects/ProjectsController.php:41
+ * @see app/Http/Controllers/Projects/ProjectsController.php:69
  * @route '/projects'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Projects\ProjectsController::store
- * @see app/Http/Controllers/Projects/ProjectsController.php:41
+ * @see app/Http/Controllers/Projects/ProjectsController.php:69
  * @route '/projects'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::store
- * @see app/Http/Controllers/Projects/ProjectsController.php:41
+ * @see app/Http/Controllers/Projects/ProjectsController.php:69
  * @route '/projects'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -309,7 +309,7 @@ show.head = (args: { project: string | number } | [project: string | number ] | 
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
 export const edit = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -324,7 +324,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
 edit.url = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -352,7 +352,7 @@ edit.url = (args: { project: string | number } | [project: string | number ] | s
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
 edit.get = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -361,7 +361,7 @@ edit.get = (args: { project: string | number } | [project: string | number ] | s
 })
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
 edit.head = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -371,7 +371,7 @@ edit.head = (args: { project: string | number } | [project: string | number ] | 
 
     /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
     const editForm = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -381,7 +381,7 @@ edit.head = (args: { project: string | number } | [project: string | number ] | 
 
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
         editForm.get = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -390,7 +390,7 @@ edit.head = (args: { project: string | number } | [project: string | number ] | 
         })
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::edit
- * @see app/Http/Controllers/Projects/ProjectsController.php:56
+ * @see app/Http/Controllers/Projects/ProjectsController.php:83
  * @route '/projects/{project}/edit'
  */
         editForm.head = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -406,7 +406,7 @@ edit.head = (args: { project: string | number } | [project: string | number ] | 
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
 export const update = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -421,7 +421,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
 update.url = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -449,7 +449,7 @@ update.url = (args: { project: string | number } | [project: string | number ] |
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
 update.put = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -458,7 +458,7 @@ update.put = (args: { project: string | number } | [project: string | number ] |
 })
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
 update.patch = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -468,7 +468,7 @@ update.patch = (args: { project: string | number } | [project: string | number ]
 
     /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
     const updateForm = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -483,7 +483,7 @@ update.patch = (args: { project: string | number } | [project: string | number ]
 
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
         updateForm.put = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -497,7 +497,7 @@ update.patch = (args: { project: string | number } | [project: string | number ]
         })
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::update
- * @see app/Http/Controllers/Projects/ProjectsController.php:67
+ * @see app/Http/Controllers/Projects/ProjectsController.php:94
  * @route '/projects/{project}'
  */
         updateForm.patch = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -513,7 +513,7 @@ update.patch = (args: { project: string | number } | [project: string | number ]
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:77
+ * @see app/Http/Controllers/Projects/ProjectsController.php:104
  * @route '/projects/{project}'
  */
 export const destroy = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -528,7 +528,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:77
+ * @see app/Http/Controllers/Projects/ProjectsController.php:104
  * @route '/projects/{project}'
  */
 destroy.url = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -556,7 +556,7 @@ destroy.url = (args: { project: string | number } | [project: string | number ] 
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:77
+ * @see app/Http/Controllers/Projects/ProjectsController.php:104
  * @route '/projects/{project}'
  */
 destroy.delete = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -566,7 +566,7 @@ destroy.delete = (args: { project: string | number } | [project: string | number
 
     /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:77
+ * @see app/Http/Controllers/Projects/ProjectsController.php:104
  * @route '/projects/{project}'
  */
     const destroyForm = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -581,7 +581,7 @@ destroy.delete = (args: { project: string | number } | [project: string | number
 
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:77
+ * @see app/Http/Controllers/Projects/ProjectsController.php:104
  * @route '/projects/{project}'
  */
         destroyForm.delete = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

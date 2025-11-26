@@ -74,8 +74,6 @@ interface Props extends PageProps {
 }
 
 
-
-
 export default function Images() {
    const rawId = localStorage.getItem("selectedProjectId");
    const id = rawId ? rawId.replace(/^"|"$/g, '') : null;
@@ -384,16 +382,12 @@ export default function Images() {
                      left: contextMenu.x,
                   }}
                >
-
                   <button
                      onClick={() => copyImageUrl(contextMenu.image!.path)}
                      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 w-full text-left"
                   >
                      В ближайшее время появится фунции
                   </button>
-
-
-
                   <hr className="my-2 border-gray-200" />
 
                   <button

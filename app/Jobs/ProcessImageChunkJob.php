@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Image;
 use App\Models\ImageLocation;
+use App\Models\Project;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -59,6 +60,9 @@ class ProcessImageChunkJob implements ShouldQueue
                 continue;
             }
 
+
+
+
             // Если ссылка начинается с //example.com — делаем https:
             if (str_starts_with($imageUrl, '//')) {
                 $imageUrl = 'https:' . $imageUrl;
@@ -71,6 +75,35 @@ class ProcessImageChunkJob implements ShouldQueue
             // ─────────────────────────────────────────────────────────────────────
 
             // 1. Уже есть в базе?
+            $parentId = Project::where('id', $this->projectId)->value('parent_id');
+
+            if ($parentId) {
+                $parsed = parse_url($imageUrl);
+
+                // Берём путь + query (если есть)
+                $pathToMatch = $parsed['path'] ?? '';
+                if (!empty($parsed['query'])) {
+                    $pathToMatch .= '?' . $parsed['query'];
+                }
+
+                if ($pathToMatch && $pathToMatch !== '/') {
+                    $image = Image::where('project_id', $parentId)
+                        ->where(function ($query) use ($pathToMatch) {
+                            $query->where('path', 'LIKE', '%' . $pathToMatch)
+                                ->orWhere('path', 'LIKE', '%' . $pathToMatch . '%');
+                        })
+                        ->first();
+
+                    if ($image && $image->size !== null) {
+                        ImageLocation::firstOrCreate([
+                            'image_id' => $image->id,
+                            'url'      => $this->pageUrl,
+                        ]);
+                        continue; // ← пропускаем скачивание
+                    }
+                }
+            }
+
             $image = Image::where('path', $imageUrl)
                 ->where('project_id', $this->projectId)
                 ->first();

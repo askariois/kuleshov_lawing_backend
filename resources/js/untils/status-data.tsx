@@ -1,5 +1,8 @@
 export const statusData = [
    {
+      id: 0, name: "all", label: "Все"
+   },
+   {
       id: 1, name: "raw", label: "Необработанное"
    },
    {
