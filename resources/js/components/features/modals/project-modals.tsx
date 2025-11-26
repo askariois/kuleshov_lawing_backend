@@ -78,7 +78,7 @@ export default function ProjectModals({ toogle, setToogle, project_parent }) {
                   </span>
                </Label>
 
-               <div className="mt-3 space-y-2">
+               <div className="mt-3 space-y-2 overflow-y-scroll h-[200px]">
                   {project_parent?.subdomains && project_parent.subdomains.length > 0 ? (
                      project_parent.subdomains.map((sub) => (
                         <div
@@ -108,12 +108,12 @@ export default function ProjectModals({ toogle, setToogle, project_parent }) {
                                  </div>
 
                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                    <button
+                                    {/* <button
                                        onClick={() => setEditingSubdomain(sub)}
                                        className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                                     >
                                        Редактировать
-                                    </button>
+                                    </button> */}
                                     <button
                                        onClick={() => deleteSubdomain(sub.id)}
                                        className="text-red-600 hover:text-red-800 text-xs font-medium"

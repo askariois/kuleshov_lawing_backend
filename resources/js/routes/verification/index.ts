@@ -233,4 +233,9 @@ verify: Object.assign(verify, verify),
 send: Object.assign(send, send),
 }
 
+export default verificationce: Object.assign(notice, notice),
+verify: Object.assign(verify, verify),
+send: Object.assign(send, send),
+}
+
 export default verification

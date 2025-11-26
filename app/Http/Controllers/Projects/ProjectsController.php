@@ -66,14 +66,13 @@ class ProjectsController extends Controller
 
 
 
-    public function store(ProfileStoreRequest $request): RedirectResponse
+    public function store(ProfileStoreRequest $request)
     {
         $data = $request->validated();
         $redirectTo = $request->return_url;
         Project::create($data);
 
-        return redirect($redirectTo)
-            ->with('success', 'Проект успешно создан!');
+        return Inertia::location($redirectTo); // ← Это правильный способ!
     }
 
 
