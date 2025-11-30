@@ -24,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     Route::post('/scan', [CrawlerController::class, 'startScan']);
+    Route::post('/scan_2', [CrawlerController::class, 'startScan_2']);
+
+
     Route::get('/progress', [CrawlerController::class, 'getProgress']);
 
     Route::get('/images/{id}', [ImagesController::class, 'index']);

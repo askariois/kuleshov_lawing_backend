@@ -21,7 +21,7 @@ export const statusData = [
    },
 
    {
-      id: 7, name: "process", label: "В процессе"
+      id: 7, name: "process", label: "Вторичное"
    },
    {
       id: 8, name: "ToR", label: "В ТЗ"

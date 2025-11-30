@@ -253,7 +253,7 @@ export default function Images() {
                   />
                </div>
                <div className='w-1/4'>
-                  <SidebarMenu >
+                  <SidebarMenu>
                      <Label htmlFor="project-select" >
                         Статус
                      </Label>
@@ -277,6 +277,35 @@ export default function Images() {
                   </SidebarMenu>
                </div>
             </div>
+            <div className="w-1/4">
+               <Label>Сортировка</Label>
+               <Select
+                  value={filters.sort_by + ':' + filters.sort_order}
+                  onValueChange={(value) => {
+                     const [sort_by, sort_order] = value.split(':');
+                     router.get(`/images/${id}/`, {
+                        ...filters,
+                        sort_by,
+                        sort_order,
+                     }, {
+                        preserveState: true,
+                        replace: true,
+                        only: ['images', 'filters', 'raw_count', 'process'],
+                     });
+                  }}
+               >
+                  <SelectTrigger className="bg-[#F1F1F1]">
+                     <SelectValue placeholder="Сортировка" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     <SelectGroup>
+                        <SelectItem value="name:asc">Имя (A → Z)</SelectItem>
+                        <SelectItem value="name:desc">Имя (Z → A)</SelectItem>
+                     </SelectGroup>
+                  </SelectContent>
+               </Select>
+            </div>
+
 
 
             <div className='flex gap-1 mt-2'>

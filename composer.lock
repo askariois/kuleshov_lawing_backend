@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "365c1516659ccf22ece0cfc9c8b87572",
+    "content-hash": "3729d022332322cdca9575a1bcd19b39",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3869,16 +3869,16 @@
         },
         {
             "name": "spatie/browsershot",
-            "version": "5.0.11",
+            "version": "5.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/browsershot.git",
-                "reference": "f84d9c332899596d0884922772593a10e3925969"
+                "reference": "127c20da43d0d711ebbc64f85053f50bc147c515"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/browsershot/zipball/f84d9c332899596d0884922772593a10e3925969",
-                "reference": "f84d9c332899596d0884922772593a10e3925969",
+                "url": "https://api.github.com/repos/spatie/browsershot/zipball/127c20da43d0d711ebbc64f85053f50bc147c515",
+                "reference": "127c20da43d0d711ebbc64f85053f50bc147c515",
                 "shasum": ""
             },
             "require": {
@@ -3886,13 +3886,13 @@
                 "ext-json": "*",
                 "php": "^8.2",
                 "spatie/temporary-directory": "^2.0",
-                "symfony/process": "^6.0|^7.0"
+                "symfony/process": "^6.0|^7.0|^8.0"
             },
             "require-dev": {
-                "pestphp/pest": "^3.0",
+                "pestphp/pest": "^3.0|^4.0",
                 "spatie/image": "^3.6",
                 "spatie/pdf-to-text": "^1.52",
-                "spatie/phpunit-snapshot-assertions": "^4.2.3|^5.0"
+                "spatie/phpunit-snapshot-assertions": "^5.0"
             },
             "type": "library",
             "autoload": {
@@ -3925,7 +3925,7 @@
                 "webpage"
             ],
             "support": {
-                "source": "https://github.com/spatie/browsershot/tree/5.0.11"
+                "source": "https://github.com/spatie/browsershot/tree/5.1.1"
             },
             "funding": [
                 {
@@ -3933,7 +3933,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-08T07:40:52+00:00"
+            "time": "2025-11-26T09:49:20+00:00"
         },
         {
             "name": "spatie/crawler",
@@ -8976,6 +8976,94 @@
                 }
             ],
             "time": "2025-08-16T05:19:02+00:00"
+        },
+        {
+            "name": "playwright-php/playwright",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/playwright-php/playwright.git",
+                "reference": "8b7e15a4ba17d598e3ce4e6a151dafe784a64af2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/playwright-php/playwright/zipball/8b7e15a4ba17d598e3ce4e6a151dafe784a64af2",
+                "reference": "8b7e15a4ba17d598e3ce4e6a151dafe784a64af2",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2",
+                "psr/clock": "^1.0",
+                "psr/log": "^3.0",
+                "symfony/console": "^6.4 || ^7.3 || ^8.0",
+                "symfony/process": "^6.4 || ^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.40",
+                "monolog/monolog": "^3.9",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^12.3",
+                "symfony/var-dumper": "^6.4 || ^7.3 || ^8.0"
+            },
+            "bin": [
+                "bin/playwright-install"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Testing/functions.php"
+                ],
+                "psr-4": {
+                    "Playwright\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Simon André",
+                    "email": "smn.andre@gmail.com",
+                    "homepage": "https://github.com/smnandre"
+                },
+                {
+                    "name": "Playwright PHP Contributors",
+                    "homepage": "https://github.com/playwright-php"
+                }
+            ],
+            "description": "Modern PHP library for Playwright automation: browsing, scraping, screenshots, testing, and more.",
+            "keywords": [
+                "automation",
+                "browser",
+                "chromium",
+                "firefox",
+                "headless",
+                "php",
+                "playwright",
+                "scraping",
+                "screenshots",
+                "test",
+                "testing",
+                "web",
+                "webkit"
+            ],
+            "support": {
+                "issues": "https://github.com/playwright-php/playwright/issues",
+                "source": "https://github.com/playwright-php/playwright/tree/v1.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/smnandre",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-11-08T13:14:40+00:00"
         },
         {
             "name": "sebastian/cli-parser",

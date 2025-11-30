@@ -19,7 +19,9 @@ function Status({ status, style }) {
                 case "free":
           return <><div className="text-[#3E95FB]">Бесплатное</div></>;
        case "process":
-          return <><div className="text-[#F59106]">В процессе</div></>;
+          return <><div className="text-[#F59106]">Вторичное</div>
+          <div className="text-[10px] text-[#7C7C7C] font-medium"> Первичное (ОК)</div>
+          </>;
        case "ToR":
           return <><div className="text-[#F59106]">В ТЗ</div></>;
        case "queue":

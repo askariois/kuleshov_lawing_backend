@@ -29,23 +29,20 @@ class SiteCrawlerJob implements ShouldQueue
    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
    // Laravel job settings
-   public $timeout = 7200; // total job timeout
-   public $tries   = 5;
-   public $backoff = [30, 60, 120, 300, 600];
+   public $timeout = 900; // total job timeout
+   public $tries = 1;
 
    protected string $startUrl;
    protected int $projectId;
    protected string $cacheKey;
 
    // Configuration (tune as needed)
-   protected int $pageLimit = 1000; // max pages to crawl per job
-   protected int $imageChunkSize = 40; // how many images per ProcessImageChunkJob
-   protected int $concurrency = 2;
-   protected int $maximumDepth = 2;
-   protected int $delayBetweenRequestsMs = 200; // ms between requests
+   protected int $pageLimit = 5000; // max pages to crawl per job
+   protected int $imageChunkSize = 60;
+   protected int $concurrency = 1;
+   protected int $delayBetweenRequestsMs = 1500; // ms between requests
    protected int $guzzleTimeout = 15;
-   protected int $guzzleConnectTimeout = 10;
-
+   protected int $guzzleConnectTimeout = 60;
    public function __construct(string $startUrl, int $projectId)
    {
       $this->startUrl = rtrim($startUrl, '/');
@@ -168,63 +165,22 @@ class SiteCrawlerJob implements ShouldQueue
                $dom = new DomCrawler($html, $pageUrl);
 
                // collect image src attributes
-               $imageUrls = $dom->filter('img[src]')
-                  ->reduce(function ($node) {
-                     $src = trim($node->attr('src') ?? '');
-                     return $src !== '';
-                  })
-                  ->each(function ($node) use ($url) {
-                     $src = (string) $node->attr('src');
-                     return $this->resolveImageUrl($src, $url);
-                  });
+               $imageUrls = $dom->filter('img')->each(function ($node) use ($url) {
+                  $candidates = [
+                     $node->attr('src'),
+                     $node->attr('data-src'),
+                     $node->attr('data-lazy-src'),
+                     $node->attr('data-original'),
+                  ];
 
-               // normalize and unique
-               $imageUrls = array_values(array_filter(array_unique($imageUrls)));
-
-               // keep only images from same host to avoid remote domains (configurable)
-               // НОВАЯ ЛОГИКА: поддомены НЕ сохраняют изображения, которые уже есть у основного домена
-               $imageUrls = array_values(array_filter($imageUrls, function ($imgUrl) {
-                  $imageHost = parse_url($imgUrl, PHP_URL_HOST) ?: $this->host;
-
-                  // Если это наш хост — ок, сохраняем
-                  if (strtolower($imageHost) === strtolower($this->host)) {
-                     return true;
-                  }
-
-                  // Если это НЕ наш хост — проверяем: а не основной ли это домен?
-                  $project = Project::find($this->projectId);
-                  if (!$project || !$project->parent_id) {
-                     return false; // основной домен — чужие изображения не берём
-                  }
-
-                  $parent = Project::select('url')->find($project->parent_id);
-                  if (!$parent) {
-                     return false;
-                  }
-
-                  $parentDomain = parse_url($parent->url ?? '', PHP_URL_HOST);
-                  if (!$parentDomain) {
-                     return false;
-                  }
-
-                  // Это изображение с основного домена — проверяем: а есть ли уже такое изображение у родителя?
-                  if (strtolower($imageHost) === strtolower($parentDomain)) {
-                     $path = parse_url($imgUrl, PHP_URL_PATH);
-                     if (!$path) return true;
-
-                     // Если у родителя уже есть изображение по этому пути — НЕ СОХРАНЯЕМ
-                     $existsInParent = Image::where('project_id', $project->parent_id)
-                        ->where('path', $path)
-                        ->exists();
-
-                     if ($existsInParent) {
-                        return false; // уже есть у родителя → не дублируем
+                  foreach ($candidates as $src) {
+                     if ($src && trim($src)) {
+                        return $this->resolveImageUrl(trim($src), $url);
                      }
                   }
-
-                  // Всё остальное — разрешаем (на всякий случай)
-                  return true;
-               }));
+                  return null;
+               });
+               $imageUrls = array_filter($imageUrls);
 
                $imagesCount = count($imageUrls);
                $this->estimatedImages += $imagesCount;
@@ -245,8 +201,6 @@ class SiteCrawlerJob implements ShouldQueue
                   $chunks = array_chunk($imageUrls, $this->imageChunkSize);
 
                   foreach ($chunks as $chunk) {
-                     // ProcessImageChunkJob should be responsible for validating URLs (HEAD/GET),
-                     // downloading images, storing DB records, retries, and error handling.
                      ProcessImageChunkJob::dispatch($chunk, $pageUrl, $this->projectId)->onQueue('chank');
                   }
                }
@@ -400,25 +354,33 @@ class SiteCrawlerJob implements ShouldQueue
       };
 
       // Provide a simple crawl profile that restricts crawling to the same host and allowed schemes.
-      // If you already have a CustomCrawlProfile, you may replace this block with your own.
-      $crawlProfile = new class($this->startUrl) extends  CrawlProfile {
-         private string $startUrl;
+      $crawlProfile = new class($this->startUrl) extends CrawlProfile {
+
          private string $startHost;
+         private Uri $baseUri;
 
          public function __construct(string $startUrl)
          {
-            $this->startUrl = $startUrl;
+            $this->baseUri = new Uri($startUrl);
             $this->startHost = parse_url($startUrl, PHP_URL_HOST) ?: '';
          }
 
          public function shouldCrawl(UriInterface $url): bool
          {
-            // allow only same host and http/https schemes
-            $host = parse_url((string) $url, PHP_URL_HOST) ?: '';
-            $scheme = parse_url((string) $url, PHP_URL_SCHEME) ?: '';
-            if ($host === '' || $host !== $this->startHost) {
+            // 1. РЕАЛЬНО привести относительные ссылки к абсолютным
+            try {
+               $resolved = UriResolver::resolve($this->baseUri, $url);
+            } catch (\Throwable $e) {
                return false;
             }
+
+            $host = $resolved->getHost();
+            $scheme = $resolved->getScheme();
+
+            if ($host !== $this->startHost) {
+               return false;
+            }
+
             if (!in_array($scheme, ['http', 'https'])) {
                return false;
             }
@@ -427,9 +389,11 @@ class SiteCrawlerJob implements ShouldQueue
          }
       };
 
+
       // Start crawling with safeguards. We catch the page-limit exception to finish gracefully.
       try {
          Crawler::create()
+            ->setMaximumDepth(1000)
             ->setCrawlObserver($observer)
             ->setCrawlProfile($crawlProfile)
             ->setConcurrency($this->concurrency)

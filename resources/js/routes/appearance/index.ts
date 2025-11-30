@@ -74,11 +74,4 @@ const appearance = {
     edit: Object.assign(edit, edit),
 }
 
-export default appearance })
-    
-    edit.form = editForm
-const appearance = {
-    edit: Object.assign(edit, edit),
-}
-
 export default appearance

@@ -20,7 +20,10 @@ class Project extends Model
         'format_images',
         'autoscan',
         'time_autoscan',
-        'parent_id'
+        'parent_id',
+        'total_pages',
+        'processed_pages',
+        'scan_status',
     ];
 
     protected $casts = [

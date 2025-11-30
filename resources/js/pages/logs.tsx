@@ -1,22 +1,54 @@
 import Header from '@/components/ui/header';
-import Status from '@/components/ui/status/Status';
 import AppLayout from '@/layouts/app-layout';
-import logs from '@/routes/logs';
-import { usePage } from '@inertiajs/react';
-import { Link } from 'lucide-react';
-import images from './images';
+import { router, usePage } from '@inertiajs/react';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import dayjs from 'dayjs';
+import { Label } from '@/components/ui/label';
+import { useEffect, useState } from 'react';
+import { Props } from 'node_modules/@headlessui/react/dist/types';
 
 export default function Logs() {
-   const { logs, errors: serverErrors } = usePage<Props>().props;
+   const { logs, search: initialSearch, errors: serverErrors } = usePage<Props>().props;
+   const [search, setSearch] = useState(initialSearch ?? '');
 
+   const page = usePage();
+   // или просто:
+   const currentPath = page.url;
+
+   const onSearch = (e) => {
+      const search = e.target.value;
+      router.get(
+         currentPath,
+         { search: search.trim() },
+         {
+            preserveState: true,
+            replace: true,
+            preserveScroll: true,
+         }
+      );
+
+   }
+
+
+   const handleClear = () => {
+      setSearch('');
+   };
    return (
       <AppLayout>
          <Header title="Логи" >
          </Header>
 
-
+         <div className='flex items-center gap-3'>
+            <div className='w-full'>
+               <Label htmlFor="search">Поиск</Label>
+               <input
+                  type="search"
+                  placeholder="Поиск..."
+                  className="w-full rounded-md border border-gray-300 bg-[#F1F1F1] px-4 py-2 focus:border-blue-500 focus:outline-none"
+                  onChange={onSearch}
+               />
+            </div>
+         </div>
 
          <div className="w-full mt-6 overflow-x-auto">
             <div
@@ -41,14 +73,10 @@ export default function Logs() {
                      gridTemplateColumns:
                         "minmax(356px, 52px) minmax(356px, 1fr) minmax(140px, 1fr)",
                   }}
-
                >
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{dayjs(log.crawler_at).format('DD.MM.YYYY  HH:mm')}</div>
                   <div className="text-[#7C7C7C] font-medium text-[13px]">{log.url}</div>
                   <div className="text-[#7C7C7C] font-medium text-[13px] text-right">{log.status}</div>
-
-
-
                </div>
                )
             })}

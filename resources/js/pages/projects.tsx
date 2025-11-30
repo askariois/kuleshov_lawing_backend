@@ -93,46 +93,12 @@ export default function Projects() {
 
 
 
-    useEffect(() => {
-        const projectIds = projects.data.map(p => p.id);
-        if (projectIds.length === 0) return;
-
-        const initial: Record<number, ProgressData> = {};
-        projectIds.forEach(id => {
-            initial[id] = { progress: 0, processed_pages: 0, total_pages: 0, status: 'pending' };
-        });
-        setProgressMap(initial);
-
-        const poll = async () => {
-            const responses = await Promise.all(
-                projectIds.map(id =>
-                    fetch(`/progress?project_id=${id}`)
-                        .then(r => r.json())
-                        .catch(() => null)
-                )
-            );
-
-            const updated: Record<number, ProgressData> = {};
-            responses.forEach((data, i) => {
-                if (data?.status) {
-                    updated[projectIds[i]] = data;
-                }
-            });
-
-            setProgressMap(prev => ({ ...prev, ...updated }));
-        };
-
-        poll();
-        const interval = setInterval(poll, 2000);
-
-        return () => clearInterval(interval);
-    }, [projects.data]);
 
     const onImage = (projectId: number) => {
         window.location.href = `/images/${projectId}`;
     }
 
-    const onScan = async (url, id) => {
+    const onScan_1 = async (url, id) => {
         const agreed = await confirm({
             title: 'Вы уверены, что хотите запустить сканирование?',
             message: 'Это действие нельзя отменить.',
@@ -140,7 +106,28 @@ export default function Projects() {
             cancelText: 'Отмена'
         });
         if (agreed) {
-            router.post('/scan', { 'url': url, 'project_id': id }, {
+            router.post('/scan', { 'url': url, 'project_id': id, return_url: "/projects" }, {
+                onSuccess: () => {
+                    toast.success('Сканирование запущено!')
+                },
+                onError: (errors) => {
+                    console.log('Ошибки валидации:', errors);
+                },
+            });
+        }
+
+    }
+
+
+    const onScan_2 = async (url, id) => {
+        const agreed = await confirm({
+            title: 'Вы уверены, что хотите запустить сканирование?',
+            message: 'Это действие нельзя отменить.',
+            confirmText: 'Запустить',
+            cancelText: 'Отмена'
+        });
+        if (agreed) {
+            router.post('/scan_2', { 'url': url, 'project_id': id, return_url: "/projects" }, {
                 onSuccess: () => {
                     toast.success('Сканирование запущено!')
                 },
@@ -194,7 +181,7 @@ export default function Projects() {
                     }}
                 >
                     <div className="font-semibold">URL</div>
-                    <div className="font-semibold">Процесс сканирования</div>
+                    <div className="font-semibold">Кол. стр.</div>
                     <div className="font-semibold">Кол-во поддоменов</div>
                     <div className="font-semibold">Посл. сканирование</div>
                     <div className="font-semibold">Всего изобр.</div>
@@ -204,10 +191,6 @@ export default function Projects() {
                 </div>
 
                 {projects.data.length !== 0 && projects.data.map((project) => {
-                    const progress = progressMap[project.id] || { progress: 0, status: 'pending' };
-                    const isRunning = progress.status === 'running';
-                    const isCompleted = progress.status === 'completed';
-
                     return (<div
                         key={project.id}
                         className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
@@ -222,19 +205,7 @@ export default function Projects() {
                             </div>
                         </div>
                         <div className="space-y-1">
-                            {isRunning && (
-                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                    <div
-                                        className="bg-blue-600 h-full transition-all duration-500"
-                                        style={{ width: `${progress.progress}%` }}
-                                    />
-                                </div>
-                            )}
-                            <div className="text-xs text-gray-500">
-                                {isRunning && `${Math.round(progress.progress)}%`}
-                                {isCompleted && 'Готово'}
-                                {!isRunning && !isCompleted && '—'}
-                            </div>
+                            0
                         </div>
                         <div className={`${project.subdomains_count > 0 ? "text-primary" : "text-[#7C7C7C]"} font-bold`}>
 
@@ -302,14 +273,44 @@ export default function Projects() {
 
 
                                 ) : (
-                                    <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan(project.url, project.id)}>
+                                    <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan_1(project.url, project.id)}>
                                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" >
                                             <path d="M8.7043 3.67629C9.76525 4.25325 9.76525 5.74675 8.7043 6.3237L2.29831 9.80725C1.26717 10.368 0 9.63815 0 8.48355V1.51645C0 0.36184 1.26718 -0.36799 2.29831 0.19274L8.7043 3.67629Z" fill="white" />
                                         </svg>
                                     </div>
                                 )}
                             </div>
+                            <div >
+                                {progressMap[project.id]?.status === 'running' ? (
+                                    <div className={`bg-[#F59106] rounded-[4px] p-2 cursor-pointer`} >
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-spin">
+                                            <g clip-path="url(#clip0_342_26)">
+                                                <path d="M6 1V3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M6 9V11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M2.46484 2.46497L3.87984 3.87997" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M8.12012 8.12L9.53512 9.535" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M1 6H3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M9 6H11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M2.46484 9.535L3.87984 8.12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M8.12012 3.87997L9.53512 2.46497" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_342_26">
+                                                    <rect width="12" height="12" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </div>
 
+
+                                ) : (
+                                    <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan_2(project.url, project.id)}>
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" >
+                                            <path d="M8.7043 3.67629C9.76525 4.25325 9.76525 5.74675 8.7043 6.3237L2.29831 9.80725C1.26717 10.368 0 9.63815 0 8.48355V1.51645C0 0.36184 1.26718 -0.36799 2.29831 0.19274L8.7043 3.67629Z" fill="white" />
+                                        </svg>2
+                                    </div>
+                                )}
+                            </div>
 
                         </div>
                     </div>

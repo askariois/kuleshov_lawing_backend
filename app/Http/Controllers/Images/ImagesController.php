@@ -32,6 +32,14 @@ class ImagesController extends Controller
             $query->where('status', $request->query('status'));
         }
 
+
+        $sortBy = $request->query('sort_by', 'name');
+        $sortOrder = $request->query('sort_order', 'asc');
+
+        if (in_array($sortBy, ['name'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
         // Пагинация с сохранением всех GET-параметров
         $images = $query->paginate(30)->withQueryString();
 
@@ -56,7 +64,6 @@ class ImagesController extends Controller
                 ->where('project_id', $id)
                 ->where('status', $request->query('status'));
 
-            // Применяем ТЕ ЖЕ фильтры поиска и mime_type, что были в основном запросе
             if ($request->filled('search')) {
                 $sortingQuery->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($request->input('search')) . '%']);
             }
@@ -65,9 +72,8 @@ class ImagesController extends Controller
                 $sortingQuery->whereIn('mime_type', $request->input('mime_type'));
             }
 
-            // Считаем позицию в очереди первичной сортировки (1 = первое в очереди)
             $image->sorting_page = $sortingQuery
-                ->where('id', '<=', $image->id)  // все изображения до текущего включительно
+                ->where('id', '<=', $image->id)
                 ->count();
 
             return $image;
@@ -83,6 +89,8 @@ class ImagesController extends Controller
                 'search'    => $request->query('search'),
                 'mime'      => $request->query('mime_type', []),
                 'status'    => $request->query('status'),
+                'sort_by'   => $sortBy,
+                'sort_order' => $sortOrder,
             ],
             'status'      => $request->session()->get('status'),
         ]);
