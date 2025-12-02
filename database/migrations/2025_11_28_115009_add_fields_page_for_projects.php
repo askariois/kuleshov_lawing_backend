@@ -14,7 +14,12 @@ return new class extends Migration
         Schema::table('projects', function (Blueprint $table) {
             $table->integer('total_pages')->default(0);
             $table->integer('processed_pages')->default(0);
-            $table->string('scan_status')->default('pending'); // pending, running, completed, failed
+            $table->enum('scan_status', ['idle', 'pending', 'running', 'completed', 'failed', 'limited'])
+                ->default('idle')
+                ->after('total_images');
+            $table->timestamp('scan_started_at')->nullable()->after('scan_status');
+            $table->timestamp('scan_finished_at')->nullable()->after('scan_started_at');
+            $table->text('scan_error')->nullable()->after('scan_finished_at');
         });
     }
 
@@ -27,6 +32,9 @@ return new class extends Migration
             $table->dropColumn('total_pages');
             $table->dropColumn('processed_pages');
             $table->dropColumn('scan_status');
+            $table->dropColumn('scan_started_at');
+            $table->dropColumn('scan_finished_at');
+            $table->dropColumn('scan_error');
         });
     }
 };

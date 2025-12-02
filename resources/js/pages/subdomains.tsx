@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import { useConfirm } from '@/hooks/useConfirm';
 import ProjectModals from '@/components/features/modals/project-modals';
+import ScanButtons from '@/components/features/scan-buttons/scan-buttons';
 
 // === Проект ===
 interface Project {
@@ -61,56 +62,18 @@ export default function Subdomains() {
    const [setting, setSetting] = useState(false);
 
    const { projects, project_parent, flash, errors: serverErrors } = usePage<Props>().props;
-   const [progressMap, setProgressMap] = useState<Record<number, ProgressData>>({});
    const { confirm, ConfirmDialog } = useConfirm();
 
 
 
+   const isAnyScanning = projects.data.some(p =>
+      ['running', 'pending'].includes(p.scan_status)
+   );
 
    const onImage = (projectId: number) => {
       window.location.href = `/images/${projectId}`;
    }
 
-   const onScan_1 = async (url, id) => {
-      const agreed = await confirm({
-         title: 'Вы уверены, что хотите запустить сканирование?',
-         message: 'Это действие нельзя отменить.',
-         confirmText: 'Запустить',
-         cancelText: 'Отмена'
-      });
-      if (agreed) {
-         router.post('/scan', { 'url': url, 'project_id': id, return_url: "/projects" }, {
-            onSuccess: () => {
-               toast.success('Сканирование запущено!')
-            },
-            onError: (errors) => {
-               console.log('Ошибки валидации:', errors);
-            },
-         });
-      }
-
-   }
-
-
-   const onScan_2 = async (url, id) => {
-      const agreed = await confirm({
-         title: 'Вы уверены, что хотите запустить сканирование?',
-         message: 'Это действие нельзя отменить.',
-         confirmText: 'Запустить',
-         cancelText: 'Отмена'
-      });
-      if (agreed) {
-         router.post('/scan_2', { 'url': url, 'project_id': id, return_url: "/projects" }, {
-            onSuccess: () => {
-               toast.success('Сканирование запущено!')
-            },
-            onError: (errors) => {
-               console.log('Ошибки валидации:', errors);
-            },
-         });
-      }
-
-   }
 
    const openSettings = (project: Project) => {
       setSetting(!setting);
@@ -148,12 +111,11 @@ export default function Subdomains() {
                className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                style={{
                   gridTemplateColumns:
-                     "minmax(160px, 2fr) minmax(120px, 2fr)  minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
+                     "minmax(160px, 2fr) minmax(120px, 2fr)   minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(220px, 0.2fr)",
                }}
             >
                <div className="font-semibold">URL</div>
                <div className="font-semibold">Кол. стр.</div>
-               <div className="font-semibold">Кол-во поддоменов</div>
                <div className="font-semibold">Посл. сканирование</div>
                <div className="font-semibold">Всего изобр.</div>
                <div className="font-semibold">Обработанно</div>
@@ -168,7 +130,7 @@ export default function Subdomains() {
                   className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                   style={{
                      gridTemplateColumns:
-                        "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
+                        "minmax(160px, 2fr) minmax(120px, 2fr)  minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(220px, 0.2fr)",
                   }}
                >
                   <div>
@@ -177,15 +139,14 @@ export default function Subdomains() {
                      </div>
                   </div>
                   <div className="space-y-1">
-                     0
+                     {project.pages_count}
                   </div>
-                  <div className="text-[#7C7C7C] font-bold"></div>
 
                   <div className="text-[#7C7C7C] font-bold">{project.last_scan ? dayjs(project.last_scan).format('DD.MM.YYYY  HH:mm') : '—'}</div>
                   <div className="text-[#7C7C7C] font-bold">{project.images_count}</div>
                   <div className="text-[#7C7C7C] font-bold">{project.processed_images}</div>
                   <div className={`font-bold ${project.not_processed_images == 0 ? "text-[#0AA947]" : "text-[#E45454]"}`}>{project.not_processed_images}</div>
-                  <div className="flex justify-center items-center gap-4">
+                  <div className="flex justify-end items-center gap-4">
                      <Link href={`/logs/${project.id}`} className='hover:scale-110 transition-transform duration-200'>
                         <svg xmlns="http://www.w3.org/2000/svg" width="12.666678428649902" height="13.333332061767578" viewBox="0 0 19 20" className='hover:fill-blue-500 cursor-pointer transition'>
                            <g transform="translate(3,2)" stroke="#B1B1B1" stroke-width="2" stroke-linecap="round">
@@ -209,66 +170,10 @@ export default function Subdomains() {
                      </div>
 
                      <div >
-                        {progressMap[project.id]?.status === 'running' ? (
-                           <div className={`bg-[#F59106] rounded-[4px] p-2 cursor-pointer`} >
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-spin">
-                                 <g clip-path="url(#clip0_342_26)">
-                                    <path d="M6 1V3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M6 9V11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M2.46484 2.46497L3.87984 3.87997" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.12012 8.12L9.53512 9.535" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M1 6H3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M9 6H11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M2.46484 9.535L3.87984 8.12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.12012 3.87997L9.53512 2.46497" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                 </g>
-                                 <defs>
-                                    <clipPath id="clip0_342_26">
-                                       <rect width="12" height="12" fill="white" />
-                                    </clipPath>
-                                 </defs>
-                              </svg>
-                           </div>
-
-
-                        ) : (
-                           <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan_1(project.url, project.id)}>
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" >
-                                 <path d="M8.7043 3.67629C9.76525 4.25325 9.76525 5.74675 8.7043 6.3237L2.29831 9.80725C1.26717 10.368 0 9.63815 0 8.48355V1.51645C0 0.36184 1.26718 -0.36799 2.29831 0.19274L8.7043 3.67629Z" fill="white" />
-                              </svg>
-                           </div>
-                        )}
+                        <ScanButtons project={project} isAnyScanning={isAnyScanning} subdomain={true} />
                      </div>
                      <div >
-                        {progressMap[project.id]?.status === 'running' ? (
-                           <div className={`bg-[#F59106] rounded-[4px] p-2 cursor-pointer`} >
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-spin">
-                                 <g clip-path="url(#clip0_342_26)">
-                                    <path d="M6 1V3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M6 9V11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M2.46484 2.46497L3.87984 3.87997" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.12012 8.12L9.53512 9.535" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M1 6H3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M9 6H11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M2.46484 9.535L3.87984 8.12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.12012 3.87997L9.53512 2.46497" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                 </g>
-                                 <defs>
-                                    <clipPath id="clip0_342_26">
-                                       <rect width="12" height="12" fill="white" />
-                                    </clipPath>
-                                 </defs>
-                              </svg>
-                           </div>
-
-
-                        ) : (
-                           <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan_2(project.url, project.id)}>
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" >
-                                 <path d="M8.7043 3.67629C9.76525 4.25325 9.76525 5.74675 8.7043 6.3237L2.29831 9.80725C1.26717 10.368 0 9.63815 0 8.48355V1.51645C0 0.36184 1.26718 -0.36799 2.29831 0.19274L8.7043 3.67629Z" fill="white" />
-                              </svg>2
-                           </div>
-                        )}
+                        <ScanButtons project={project} isAnyScanning={isAnyScanning} sitemap={true} subdomain={true} />
                      </div>
 
 

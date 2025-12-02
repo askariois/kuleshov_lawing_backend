@@ -8,6 +8,7 @@ use App\Jobs\PlaywrightPageCrawlerJob;
 use Illuminate\Http\Request;
 use App\Jobs\SiteCrawlerJob;
 use App\Jobs\SitemapJob;
+use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -15,11 +16,15 @@ use Spatie\Browsershot\Browsershot;
 
 class CrawlerController extends Controller
 {
-   public function startScan(Request $request)
+   public function startScan(Request $request, Project $project)
    {
       $startUrl = $request->input('url', 'https://kuleshov.studio'); // Или из проекта
       $projectId = $request->input('project_id', 1); // Предполагаем project_id
       $redirectTo = $request->return_url;
+
+      if (in_array($project->scan_status, ['pending', 'running'])) {
+         return back()->with('error', 'Сайт уже сканируется');
+      }
 
 
       SiteCrawlerJob::dispatch($startUrl,  $projectId);
@@ -38,21 +43,5 @@ class CrawlerController extends Controller
       SitemapJob::dispatch($startUrl,  $projectId)->onQueue('sitemap');
 
       return Inertia::location($redirectTo);
-   }
-
-
-   public function getProgress(Request $request)
-   {
-      $projectId = $request->query('project_id');
-
-      $cache = Cache::get("crawler_progress_{$projectId}", [
-         'progress' => 0,
-         'processed_pages' => 0,
-         'total_pages' => 0,
-         'total_images' => 0,
-         'status' => 'idle'
-      ]);
-
-      return response()->json($cache);
    }
 }

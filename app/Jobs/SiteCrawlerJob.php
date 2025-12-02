@@ -55,6 +55,14 @@ class SiteCrawlerJob implements ShouldQueue
 
    public function handle(): void
    {
+
+
+      Project::where('id', $this->projectId)->update([
+         'scan_status' => 'running',
+         'scan_started_at' => now(),
+         'scan_finished_at' => null,
+         'scan_error' => null,
+      ]);
       // initialize progress cache (minimal DB work in the crawl loop)
       Cache::put($this->cacheKey, [
          'progress' => 0,
@@ -182,7 +190,6 @@ class SiteCrawlerJob implements ShouldQueue
                $imageUrls = array_values(array_filter(array_unique($imageUrls)));
 
                // keep only images from same host to avoid remote domains (configurable)
-               // НОВАЯ ЛОГИКА: поддомены НЕ сохраняют изображения, которые уже есть у основного домена
                $imageUrls = array_values(array_filter($imageUrls, function ($imgUrl) {
                   $imageHost = parse_url($imgUrl, PHP_URL_HOST) ?: $this->host;
 
@@ -329,7 +336,12 @@ class SiteCrawlerJob implements ShouldQueue
                'last_scan' => now(),
                'total_images' => $totalImages,
             ]);
-
+            Project::where('id', $this->projectId)->update([
+               'last_scan' => now(),
+               'total_images' => $totalImages,
+               'scan_status' => 'completed',
+               'scan_finished_at' => now(),
+            ]);
             // Update cache (final)
             Cache::put($this->cacheKey, [
                'progress' => 100,
@@ -454,6 +466,11 @@ class SiteCrawlerJob implements ShouldQueue
                   'last_scan' => now(),
                   'total_images' => $estimatedImages,
                ]);
+
+               Project::where('id', $this->projectId)->update([
+                  'scan_status' => 'limited',
+                  'scan_finished_at' => now(),
+               ]);
                Cache::put($this->cacheKey, [
                   'progress' => 100,
                   'processed_pages' => $processedPages,
@@ -472,12 +489,14 @@ class SiteCrawlerJob implements ShouldQueue
          $processedPages = $cached['processed_pages'] ?? 0;
          $estimatedImages = $cached['total_images_estimated'] ?? 0;
 
+
          Project::where('id', $this->projectId)->update([
             'last_scan' => now(),
-            // do not overwrite total_images with 0; keep previous or estimated
             'total_images' => max($estimatedImages, Project::where('id', $this->projectId)->value('total_images') ?? 0),
+            'scan_status' => 'failed',
+            'scan_finished_at' => now(),
+            'scan_error' => $e->getMessage(),
          ]);
-
          Cache::put($this->cacheKey, [
             'progress' => min(99, $cached['progress'] ?? 0),
             'processed_pages' => $processedPages,

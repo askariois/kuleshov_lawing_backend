@@ -20,6 +20,7 @@ class ProjectsController extends Controller
     {
         $projects = Project::with('subdomains')->withCount([
             'subdomains as subdomains_count',
+            'pages as pages_count',
             'images as images_count' => function ($query) {
                 $query;
             },
@@ -42,6 +43,7 @@ class ProjectsController extends Controller
     public function subdomains(Request $request, $id): Response
     {
         $projects = Project::with('subdomains')->withCount([
+            'pages as pages_count',
             'images as images_count' => function ($query) {
                 $query;
             },

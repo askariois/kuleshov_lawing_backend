@@ -14,7 +14,7 @@ class CrawlerLogsController extends Controller
 
    public function index(Request $request, $id)
    {
-      $query = CrawledLogs::where('project_id', $id);
+      $query = CrawledLogs::where('project_id', $id)->orderBy('updated_at', 'desc');;
 
       $search = $request->input('search');
 

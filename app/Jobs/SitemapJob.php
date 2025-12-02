@@ -48,6 +48,16 @@ class SitemapJob implements ShouldQueue
         Log::info('[SitemapJob] START', ['project_id' => $this->projectId]);
 
         try {
+
+            // ВАЖНО: Сразу ставим статус running в БД
+            Project::where('id', $this->projectId)->update([
+                'scan_status'      => 'running',
+                'scan_started_at'  => now(),
+                'scan_finished_at' => null,
+                'scan_error'       => null,
+            ]);
+
+
             Cache::put($this->cacheKey, [
                 'progress'        => 0,
                 'processed_pages' => 0,
@@ -85,6 +95,11 @@ class SitemapJob implements ShouldQueue
 
             if (empty($pageUrls)) {
                 Log::warning('[SitemapJob] Sitemap пустой', ['project_id' => $this->projectId]);
+                Project::where('id', $this->projectId)->update([
+                    'scan_status'     => 'failed',
+                    'scan_finished_at' => now(),
+                    'scan_error'      => 'Sitemap не найден или пустой',
+                ]);
                 $this->markAsFailed('Sitemap не найден или пустой');
                 return;
             }
@@ -154,16 +169,11 @@ class SitemapJob implements ShouldQueue
                         $name     = basename($path) ?: 'unknown.jpg';
 
                         // Уникальность по path + project_id (именно так у тебя в БД)
-                        $image = Image::updateOrCreate(
-                            ['path' => $cleanUrl, 'project_id' => $this->projectId],
-                            [
-                                'name'      => $name,
-                                'mime_type' => null,
-                                'size'      => null,
-                                'width'     => null,
-                                'height'    => null,
-                                'status'    => 'processed',
-                            ]
+                        // КЛЮЧЕВАЯ ЛОГИКА: Ищем изображение сначала у родителя, потом у себя
+                        $image = $this->findOrCreateSharedImage(
+                            fullUrl: $imgUrl,
+                            name: $name,
+                            projectId: $this->projectId
                         );
 
                         ImageLocation::firstOrCreate([
@@ -216,8 +226,9 @@ class SitemapJob implements ShouldQueue
 
             Project::where('id', $this->projectId)->update([
                 'last_scan'    => now(),
-                'images_count' => $totalImages,
-                'scan_status'  => 'completed',
+                'images_count'    => $totalImages,
+                'scan_status'     => 'completed',
+                'scan_finished_at' => now(),
             ]);
 
             Cache::put($this->cacheKey, [
@@ -253,7 +264,7 @@ class SitemapJob implements ShouldQueue
         $image->update([
             'mime_type' => $mime ?: null,
             'size'      => $size,
-            'status'    => $size ? 'processed' : 'processed',
+            'status'    => 'raw',
         ]);
     }
 
@@ -458,7 +469,7 @@ class SitemapJob implements ShouldQueue
         $projectHost = parse_url($this->startUrl, PHP_URL_HOST);
 
         // 1. Основной домен — только свои изображения
-        $project = Project::select('parent_id', 'domain')->find($this->projectId);
+        $project = Project::select('parent_id', 'url')->find($this->projectId);
 
         if (!$project->parent_id) {
             // Это основной домен — разрешаем только свой хост
@@ -468,7 +479,7 @@ class SitemapJob implements ShouldQueue
         // 2. Это поддомен — разрешаем:
         //    - свой домен
         //    - основной домен (parent)
-        $mainDomainProject = Project::select('domain')
+        $mainDomainProject = Project::select('url')
             ->where('id', $project->parent_id)
             ->first();
 
@@ -487,6 +498,63 @@ class SitemapJob implements ShouldQueue
         return in_array(strtolower($imageHost), $allowedHosts, true);
     }
 
+
+    private function findOrCreateSharedImage(string $fullUrl, string $name, int $projectId): Image
+    {
+        // КЛЮЧЕВАЯ ФИШКА: Приводим любой URL к единому "нормализованному пути"
+        $normalizedPath = $this->normalizePath($fullUrl);
+
+        $project = Project::select('id', 'parent_id')->find($projectId);
+
+        // 1. Если это поддомен — ищем у родителя по нормализованному пути
+        if ($project->parent_id) {
+            $parentImage = Image::where('project_id', $project->parent_id)
+                ->whereRaw('LOWER(SUBSTRING_INDEX(path, "/", -1)) = LOWER(?)', [$normalizedPath])
+                ->orWhere('path', 'LIKE', "%{$normalizedPath}")
+                ->first();
+
+            if ($parentImage) {
+                // Log::info('[SitemapJob] Найдено у родителя по нормализованному пути', [
+                //     'normalized' => $normalizedPath,
+                //     'parent_image_id' => $parentImage->id,
+                // ]);
+                return $parentImage;
+            }
+        }
+
+        // 2. Если не нашли — создаём у текущего проекта (с полным URL)
+        return Image::updateOrCreate(
+            [
+                'project_id' => $projectId,
+                'path'       => $fullUrl, // оставляем как есть — для скачивания
+            ],
+            [
+                'name'       => $name,
+                'mime_type'  => null,
+                'size'       => null,
+                'width'      => null,
+                'height'     => null,
+                'status'     => 'raw',
+            ]
+        );
+    }
+
+
+    private function normalizePath(string $url): string
+    {
+        $parsed = parse_url($url);
+        if (!$parsed) return $url;
+
+        $path = $parsed['path'] ?? '/';
+
+        // Убираем query и fragment
+        $path = strtok($path, '?');
+        $path = strtok($path, '#');
+
+        // Приводим к нижнему регистру (на всякий случай)
+        return strtolower($path);
+    }
+
     private function updateProgress(int $processed, int $total): void
     {
         $progress = $total > 0 ? min(99, (int)round(($processed / $total) * 100)) : 0;
@@ -503,6 +571,11 @@ class SitemapJob implements ShouldQueue
     private function markAsFailed(string $message): void
     {
         Project::where('id', $this->projectId)->update(['scan_status' => 'failed']);
+        Project::where('id', $this->projectId)->update([
+            'scan_status'     => 'failed',
+            'scan_finished_at' => now(),
+            'scan_error'      => $message,
+        ]);
         Cache::put($this->cacheKey, [
             'progress' => 0,
             'status'   => 'failed',

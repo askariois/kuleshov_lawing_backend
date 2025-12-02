@@ -17,6 +17,8 @@ import { useConfirm } from '@/hooks/useConfirm';
 import { Checkbox } from '@radix-ui/react-checkbox';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import ProjectModals from '@/components/features/modals/project-modals';
+import { log } from 'console';
+import ScanButtons from '@/components/features/scan-buttons/scan-buttons';
 
 // === Проект ===
 interface Project {
@@ -67,7 +69,6 @@ export default function Projects() {
     const [add, setAdd] = useState(false);
     const [setting, setSetting] = useState(false);
     const { projects, flash, errors: serverErrors } = usePage<Props>().props;
-    const [progressMap, setProgressMap] = useState<Record<number, ProgressData>>({});
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const { confirm, ConfirmDialog } = useConfirm();
 
@@ -91,58 +92,22 @@ export default function Projects() {
         });
     };
 
-
+    const isAnyScanning = projects.data.some(p =>
+        ['running', 'pending'].includes(p.scan_status)
+    );
 
 
     const onImage = (projectId: number) => {
         window.location.href = `/images/${projectId}`;
     }
 
-    const onScan_1 = async (url, id) => {
-        const agreed = await confirm({
-            title: 'Вы уверены, что хотите запустить сканирование?',
-            message: 'Это действие нельзя отменить.',
-            confirmText: 'Запустить',
-            cancelText: 'Отмена'
-        });
-        if (agreed) {
-            router.post('/scan', { 'url': url, 'project_id': id, return_url: "/projects" }, {
-                onSuccess: () => {
-                    toast.success('Сканирование запущено!')
-                },
-                onError: (errors) => {
-                    console.log('Ошибки валидации:', errors);
-                },
-            });
-        }
 
-    }
-
-
-    const onScan_2 = async (url, id) => {
-        const agreed = await confirm({
-            title: 'Вы уверены, что хотите запустить сканирование?',
-            message: 'Это действие нельзя отменить.',
-            confirmText: 'Запустить',
-            cancelText: 'Отмена'
-        });
-        if (agreed) {
-            router.post('/scan_2', { 'url': url, 'project_id': id, return_url: "/projects" }, {
-                onSuccess: () => {
-                    toast.success('Сканирование запущено!')
-                },
-                onError: (errors) => {
-                    console.log('Ошибки валидации:', errors);
-                },
-            });
-        }
-
-    }
 
     const openSettings = (project: Project) => {
         setSelectedProject(project);
         setSetting(true);
     };
+    console.log(projects);
 
 
     return (
@@ -177,7 +142,7 @@ export default function Projects() {
                     className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                     style={{
                         gridTemplateColumns:
-                            "minmax(160px, 2fr) minmax(120px, 2fr)  minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
+                            "minmax(160px, 2fr) minmax(40px, 1fr)  minmax(40px, 1fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(160px, 0.2fr)",
                     }}
                 >
                     <div className="font-semibold">URL</div>
@@ -196,7 +161,7 @@ export default function Projects() {
                         className="grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2"
                         style={{
                             gridTemplateColumns:
-                                "minmax(160px, 2fr) minmax(120px, 2fr) minmax(120px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 0.2fr)",
+                                "minmax(160px, 2fr) minmax(40px, 1fr) minmax(40px, 1fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(160px, 0.2fr)",
                         }}
                     >
                         <div>
@@ -205,7 +170,7 @@ export default function Projects() {
                             </div>
                         </div>
                         <div className="space-y-1">
-                            0
+                            {project.pages_count}
                         </div>
                         <div className={`${project.subdomains_count > 0 ? "text-primary" : "text-[#7C7C7C]"} font-bold`}>
 
@@ -250,66 +215,10 @@ export default function Projects() {
                             </div>
 
                             <div >
-                                {progressMap[project.id]?.status === 'running' ? (
-                                    <div className={`bg-[#F59106] rounded-[4px] p-2 cursor-pointer`} >
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-spin">
-                                            <g clip-path="url(#clip0_342_26)">
-                                                <path d="M6 1V3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M6 9V11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M2.46484 2.46497L3.87984 3.87997" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M8.12012 8.12L9.53512 9.535" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M1 6H3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M9 6H11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M2.46484 9.535L3.87984 8.12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M8.12012 3.87997L9.53512 2.46497" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_342_26">
-                                                    <rect width="12" height="12" fill="white" />
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </div>
-
-
-                                ) : (
-                                    <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan_1(project.url, project.id)}>
-                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" >
-                                            <path d="M8.7043 3.67629C9.76525 4.25325 9.76525 5.74675 8.7043 6.3237L2.29831 9.80725C1.26717 10.368 0 9.63815 0 8.48355V1.51645C0 0.36184 1.26718 -0.36799 2.29831 0.19274L8.7043 3.67629Z" fill="white" />
-                                        </svg>
-                                    </div>
-                                )}
+                                <ScanButtons project={project} isAnyScanning={isAnyScanning} />
                             </div>
                             <div >
-                                {progressMap[project.id]?.status === 'running' ? (
-                                    <div className={`bg-[#F59106] rounded-[4px] p-2 cursor-pointer`} >
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-spin">
-                                            <g clip-path="url(#clip0_342_26)">
-                                                <path d="M6 1V3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M6 9V11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M2.46484 2.46497L3.87984 3.87997" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M8.12012 8.12L9.53512 9.535" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M1 6H3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M9 6H11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M2.46484 9.535L3.87984 8.12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M8.12012 3.87997L9.53512 2.46497" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_342_26">
-                                                    <rect width="12" height="12" fill="white" />
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </div>
-
-
-                                ) : (
-                                    <div className={`bg-[#0AA947] rounded-[4px] p-2 cursor-pointer`} onClick={() => onScan_2(project.url, project.id)}>
-                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" >
-                                            <path d="M8.7043 3.67629C9.76525 4.25325 9.76525 5.74675 8.7043 6.3237L2.29831 9.80725C1.26717 10.368 0 9.63815 0 8.48355V1.51645C0 0.36184 1.26718 -0.36799 2.29831 0.19274L8.7043 3.67629Z" fill="white" />
-                                        </svg>2
-                                    </div>
-                                )}
+                                <ScanButtons project={project} isAnyScanning={isAnyScanning} sitemap={true} />
                             </div>
 
                         </div>

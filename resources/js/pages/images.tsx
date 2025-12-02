@@ -49,7 +49,7 @@ interface IImage {
    size: string | null;
    status: string;
    project_id: number;
-   locations: { id: number; url: string }[];
+   // locations: { id: number; url: string }[];
 }
 
 // === Пагинатор (Laravel) ===
@@ -340,14 +340,14 @@ export default function Images() {
                   className="grid gap-4 text-sm font-medium text-gray-700 mb-2 border-b border-solid border-[#B1B1B1]/30 py-2"
                   style={{
                      gridTemplateColumns:
-                        "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
+                        "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr)  minmax(140px, 1fr)",
                   }}
                >
                   <div className="font-semibold">IMG</div>
                   <div className="font-semibold">Наименование</div>
                   <div className="font-semibold">Формат</div>
                   <div className="font-semibold">Размер</div>
-                  <div className="font-semibold">Расположение</div>
+                  {/* <div className="font-semibold">Расположение</div> */}
                   <div className="font-semibold text-right">Статус</div>
                </div>
 
@@ -357,14 +357,12 @@ export default function Images() {
                      onContextMenu={(e) => handleContextMenu(e, image)}
                      className={cn(
                         "grid gap-4 items-center text-sm text-gray-900 border-b border-solid border-[#B1B1B1]/30 py-2 transition cursor-pointer relative",
-                        // Подсветка при hover
                         "hover:bg-[#F1F1F1]",
-                        // Подсветка, если это текущая строка с открытым меню
                         contextMenu.image?.id === image.id && "bg-[#F1F1F1]"
                      )}
                      style={{
                         gridTemplateColumns:
-                           "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
+                           "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr)  minmax(140px, 1fr)",
                      }}
                   >
                      {/* Обычный левый клик — переход */}
@@ -386,10 +384,10 @@ export default function Images() {
                         <div className="text-[#7C7C7C] text-[13px]">
                            {image.width ? `${image.width} x ${image.height}` : "—"}
                         </div>
-                        <div className="text-[#7C7C7C] text-[13px]">
+                        {/* <div className="text-[#7C7C7C] text-[13px]">
                            {image.locations[0]?.url}
                            {image.locations.length > 1 && <span className="block text-xs">+ещё {image.locations.length - 1}</span>}
-                        </div>
+                        </div> */}
                         <div className="text-right">
                            <Status status={image.status} />
                         </div>

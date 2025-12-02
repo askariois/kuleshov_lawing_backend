@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Images;
 use App\Http\Controllers\Controller;
 use App\Models\Image;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,12 +15,25 @@ class ImagesController extends Controller
 
     function index(Request $request, $id): Response
     {
-        $query = Image::with('locations')->where('project_id', $id);
+        $query = Image::where('project_id', $id);
 
         // === ПОИСК ПО ИМЕНИ ===
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+
+            $query->where(function ($q) use ($search) {
+                // 1. Поиск по полному URL
+                $q->where('path', 'LIKE', "%{$search}%")
+
+                    // 2. Поиск по "человеческой" части URL (после домена)
+                    ->orWhereRaw('SUBSTRING_INDEX(path, "/", -1) LIKE ?', ["%{$search}%"])
+
+                    // 3. Поиск по последним двум сегментам (часто помогает)
+                    ->orWhereRaw('RIGHT(path, LENGTH(path) - LOCATE("/", path, LOCATE("/", path, 9) + 1)) LIKE ?', ["%{$search}%"])
+
+                    // 4. Поиск по кириллическому транслиту (очень важно!)
+                    ->orWhere('path', 'LIKE', "%" . Str::slug($search, '-') . "%");
+            });
         }
 
         // === ФИЛЬТР ПО MIME_TYPE ===

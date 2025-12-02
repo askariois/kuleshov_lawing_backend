@@ -16,9 +16,10 @@ import SingleQueue from './single-queue/single-queue';
 
 export default function Single() {
    const { image, currentPage, errors: serverErrors } = usePage<Props>().props;
+
    const renderInfoTab = () => {
 
-      if (['author', 'design', 'raw', 'process', 'clent'].includes(image.status)) {
+      if (['author', 'design', 'raw', 'process', 'clent', 'free'].includes(image.status)) {
          return <SingleDefault />;
       }
       if (['queue'].includes(image.status)) {

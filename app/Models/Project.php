@@ -24,6 +24,9 @@ class Project extends Model
         'total_pages',
         'processed_pages',
         'scan_status',
+        'scan_started_at',
+        'scan_finished_at',
+        'scan_error'
     ];
 
     protected $casts = [
@@ -34,6 +37,11 @@ class Project extends Model
     public function images()
     {
         return $this->hasMany(Image::class);
+    }
+
+    public function pages()
+    {
+        return $this->hasMany(CrawledLogs::class);
     }
 
     public function subdomains()
