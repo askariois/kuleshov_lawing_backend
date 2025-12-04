@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
 export const index = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
 index.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ index.url = (args: { id: string | number } | [id: string | number ] | string | n
 
 /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
 index.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ index.get = (args: { id: string | number } | [id: string | number ] | string | n
 })
 /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
 index.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ index.head = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
     const indexForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -73,7 +73,7 @@ index.head = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
         indexForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -82,7 +82,7 @@ index.head = (args: { id: string | number } | [id: string | number ] | string | 
         })
             /**
 * @see \App\Http\Controllers\Sort\SortController::index
- * @see app/Http/Controllers/Sort/SortController.php:16
+ * @see app/Http/Controllers/Sort/SortController.php:18
  * @route '/primary-sorting/{id}'
  */
         indexForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

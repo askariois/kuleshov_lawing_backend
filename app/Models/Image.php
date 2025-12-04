@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Image extends Model
 {
@@ -32,9 +33,9 @@ class Image extends Model
         return $this->hasMany(ImageLocation::class);
     }
 
-    public function duplicate(): BelongsTo
+    public function duplicate(): HasOne
     {
-        return $this->belongsTo(ImageDuplicate::class, 'id', 'image_id');
+        return $this->hasOne(ImageDuplicate::class, 'image_id', 'id');
     }
 
     public function project(): BelongsTo

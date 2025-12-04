@@ -21,6 +21,6 @@ class DuplicateSource extends Model
     // ← ЭТО ОБЯЗАТЕЛЬНО!
     public function duplicate()
     {
-        return $this->belongsTo(ImageDuplicate::class, 'image_duplicates_id');
+        return $this->belongsTo(ImageDuplicate::class);
     }
 }

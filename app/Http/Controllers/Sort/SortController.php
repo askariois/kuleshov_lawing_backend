@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Sort;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\AutoMarkFreeImagesJob;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Illuminate\Http\Response as HttpResponse;
 use App\Jobs\CheckImageDuplicates;
 use App\Models\Image;
+use App\Models\ImageDuplicate;
 use Inertia\Inertia;
 
 class SortController extends Controller
@@ -126,5 +128,33 @@ class SortController extends Controller
             'mime_type' => $request->input('mime_type', []),
          ],
       ]);
+   }
+
+   public function checkDuplicates(Request $request, Image $image)
+   {
+      // Опционально: проверка, что статус действительно process
+      if ($image->status !== 'process') {
+         return response()->json([
+            'message' => 'Изображение не в статусе process'
+         ], 400);
+      }
+      ImageDuplicate::updateOrCreate(
+         ['image_id' => $image->id],
+         [
+            'status'  => "pending",
+         ]
+      );
+
+      // Запускаем job (асинхронно)
+      CheckImageDuplicates::dispatch($image);
+
+      return back()->with('success', 'Перезапуск поиска дубликатов успешно запущен!');
+   }
+
+   public function runAutoFree()
+   {
+      AutoMarkFreeImagesJob::dispatch();
+
+      return back()->with('success', 'Автоматическая разметка free-изображений запущена в фоне');
    }
 }

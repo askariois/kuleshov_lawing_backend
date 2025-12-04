@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/primary-sorting/{id}', [SortController::class, 'sort'])->name('primary.sorting.index');
     Route::post('/primary-sorting/{id}/sort', [SortController::class, 'storeSorting']);
     Route::get('/secondary-sorting/{id}', [SortController::class, 'sort_secondary'])->name('secondary.sorting.index');
+    Route::post('/secondary-sorting/{image}/check-duplicates', [SortController::class, 'checkDuplicates'])
+        ->name('images.check-duplicates');
+    Route::get('/secondary-free', [SortController::class, 'runAutoFree'])
+        ->name('images.autoFreeReplace');
 
     Route::get('/logs/{id}', [CrawlerLogsController::class, 'index'])->name('logs.index');
 

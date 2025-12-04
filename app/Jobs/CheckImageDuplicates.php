@@ -26,6 +26,7 @@ class CheckImageDuplicates implements ShouldQueue
 
     public function handle(): void
     {
+
         $key = app()->environment('local', 'testing')
             ? "6mm60lsCNIBqFwOWjJqA80QZHh9BMwc-ber4u=t^"
             : config('services.tineye.api_key');
@@ -81,7 +82,8 @@ class CheckImageDuplicates implements ShouldQueue
                 $cleanDomain = strtolower(preg_replace('/^www\./', '', parse_url($domain, PHP_URL_HOST) ?: $domain));
 
                 // 4. Находим или создаём источник
-                DuplicateSource::create(
+                DuplicateSource::updateOrCreate(
+                    ['image_duplicates_id' =>  $imageDuplicate->id],
                     [
                         'domain' => $cleanDomain,
                         'image_duplicates_id' =>  $imageDuplicate->id,
@@ -90,7 +92,12 @@ class CheckImageDuplicates implements ShouldQueue
                     ]
                 );
             }
-
+            ImageDuplicate::updateOrCreate(
+                ['image_id' => $this->image->id],
+                [
+                    'status'  => "complated",
+                ]
+            );
             Log::info("Дубликаты обработаны для изображения {$this->image->id}", [
                 'found' => count($matches),
                 'sources_attached' => $imageDuplicate->sources()->count(),

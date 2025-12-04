@@ -107,7 +107,6 @@ export default function Projects() {
         setSelectedProject(project);
         setSetting(true);
     };
-    console.log(projects);
 
 
     return (

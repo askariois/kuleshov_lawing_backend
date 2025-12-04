@@ -5,9 +5,14 @@ import { router } from '@inertiajs/react';
 import SiteChips from '../sitechips/sitechips';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/hooks/useConfirm';
+import toast from 'react-hot-toast';
 
 
 function Sorting({ img, images, projectId, buttons }) {
+   const { confirm, ConfirmDialog } = useConfirm();
+
    const [name, ext] = img.name.split(/\.(?=[^\.]+$)/);
    const [showAllLocations, setShowAllLocations] = useState<Record<number, boolean>>({});
    // Функция переключения
@@ -17,7 +22,51 @@ function Sorting({ img, images, projectId, buttons }) {
          [imageId]: !prev[imageId],
       }));
    };
-   console.log(img);
+
+   const onDuplicate = async (id) => {
+      const agreed = await confirm({
+         title: 'Вы уверены, что хотите запустить перезапустить поиск?',
+         message: 'Это действие нельзя отменить.',
+         confirmText: 'Запустить',
+         cancelText: 'Отмена'
+      });
+      if (agreed) {
+         router.post(`/secondary-sorting/${id}/check-duplicates`, {}, {
+            preserveState: false,
+            preserveScroll: false,
+            replace: true,
+            onSuccess: () => {
+               toast.success('Перазапуск запущен!');
+            },
+            onError: (errors) => {
+               console.log('Ошибки валидации:', errors);
+            },
+         });
+      }
+   }
+
+   const freeLogic = async () => {
+      const agreed = await confirm({
+         title: 'Вы уверены, что хотите запустить Автоматический перенос на Бесплатное?',
+         message: 'Это действие нельзя отменить.',
+         confirmText: 'Запустить',
+         cancelText: 'Отмена'
+      });
+      if (agreed) {
+         router.get(`/secondary-free`, {}, {
+            preserveState: false,
+            preserveScroll: false,
+            replace: true,
+            onSuccess: () => {
+               toast.success('Процесс запущен!');
+            },
+            onError: (errors) => {
+               console.log('Ошибки валидации:', errors);
+            },
+         });
+      }
+   }
+
 
    return (
       <>
@@ -45,7 +94,14 @@ function Sorting({ img, images, projectId, buttons }) {
                            </div>
 
 
-                           <Status status={img.status} />
+                           <div className='flex items-center flex-col justify-center'>
+                              <Status status={img.status} />
+                              {img.status == "process" &&
+                                 <Button type="button" variant={img?.duplicate?.status == "pending" ? "pending" : 'primary'} className='mt-4' onClick={img.duplicate.status == "pending" ? router.reload({ preserveScroll: true }) : () => onDuplicate(img.id)}>
+                                    {img.duplicate.status == "pending" ? "Ожидается" : "Перезапуск"}
+                                 </Button>
+                              }
+                           </div>
 
                         </div>
                         <div className="mt-4">
@@ -165,8 +221,12 @@ function Sorting({ img, images, projectId, buttons }) {
 
                {buttons}
 
-               <div className='w-full mt-9 flex'>
-                  <TextLink href={`/images/${projectId}`} variant="primary" size={'lg'} className='ml-auto'>
+               <div className='w-full mt-9 flex justify-end gap-3'>
+                  {img.status == "process" && <Button onClick={freeLogic} variant="primary" size={'lg'} className='ml-auto'>
+                     Автоматический перенос на бесплатно
+                  </Button>}
+
+                  <TextLink href={`/images/${projectId}`} variant="primary" size={'lg'} >
                      Назад к списку
                   </TextLink>
                </div></>
@@ -177,6 +237,8 @@ function Sorting({ img, images, projectId, buttons }) {
                   Вернуться к списку
                </TextLink></div>
          }
+         <ConfirmDialog />
+
       </>
    )
 }

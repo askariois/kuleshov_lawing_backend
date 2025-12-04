@@ -143,7 +143,7 @@ class ImagesController extends Controller
 
     function single(Request $request,  $single): Response
     {
-        $image =  Image::with('locations', 'duplicate')->find($single);
+        $image =  Image::with('locations', 'duplicate', 'duplicate.sources')->find($single);
 
         return Inertia::render('single', [
             'image' =>   $image,
