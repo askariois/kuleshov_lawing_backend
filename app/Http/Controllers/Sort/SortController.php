@@ -138,12 +138,11 @@ class SortController extends Controller
             'message' => 'Изображение не в статусе process'
          ], 400);
       }
-      ImageDuplicate::updateOrCreate(
-         ['image_id' => $image->id],
-         [
-            'status'  => "pending",
-         ]
-      );
+      $duplicate = ImageDuplicate::where('image_id', $image->id)->first();
+
+      if ($duplicate) {
+         $duplicate->update(['status' => 'pending']);
+      }
 
       // Запускаем job (асинхронно)
       CheckImageDuplicates::dispatch($image);

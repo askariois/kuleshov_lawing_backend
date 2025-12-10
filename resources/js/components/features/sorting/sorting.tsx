@@ -97,8 +97,8 @@ function Sorting({ img, images, projectId, buttons }) {
                            <div className='flex items-center flex-col justify-center'>
                               <Status status={img.status} />
                               {img.status == "process" &&
-                                 <Button type="button" variant={img?.duplicate?.status == "pending" ? "pending" : 'primary'} className='mt-4' onClick={img.duplicate.status == "pending" ? router.reload({ preserveScroll: true }) : () => onDuplicate(img.id)}>
-                                    {img.duplicate.status == "pending" ? "Ожидается" : "Перезапуск"}
+                                 <Button type="button" variant={img?.duplicate?.status == "pending" ? "pending" : 'primary'} className='mt-4' onClick={img?.duplicate?.status == "pending" ? router.reload({ preserveScroll: true }) : () => onDuplicate(img.id)}>
+                                    {img?.duplicate?.status == "pending" ? "Ожидается" : "Перезапуск"}
                                  </Button>
                               }
                            </div>

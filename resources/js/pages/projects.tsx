@@ -19,6 +19,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import ProjectModals from '@/components/features/modals/project-modals';
 import { log } from 'console';
 import ScanButtons from '@/components/features/scan-buttons/scan-buttons';
+import { Textarea } from "@/components/ui/textarea"
 
 // === Проект ===
 interface Project {
@@ -74,7 +75,9 @@ export default function Projects() {
 
     const { data, setData, post, processing, errors } = useForm({
         name: '',
-        url: 'https://', // Предзаполняем https://
+        url: 'https://',
+        ai_name: '',
+        ai_description: '',
         return_url: "/projects"
     });
     const onAdd = () => setAdd(!add);
@@ -96,18 +99,16 @@ export default function Projects() {
         ['running', 'pending'].includes(p.scan_status)
     );
 
-
     const onImage = (projectId: number) => {
         window.location.href = `/images/${projectId}`;
     }
-
-
 
     const openSettings = (project: Project) => {
         setSelectedProject(project);
         setSetting(true);
     };
 
+    console.log(projects);
 
     return (
         <AppLayout>
@@ -230,21 +231,22 @@ export default function Projects() {
             <Modal show={add} onHide={onAdd} title="Новый проект">
                 <form onSubmit={onSubmit} className="space-y-4">
 
-                    <div>
-                        <Label htmlFor="url">URL сайта</Label>
-                        <Input
-                            id="url"
-                            type="text"
-                            value={data.url}
-                            onChange={(e) => setData({ 'url': e.target.value, 'name': e.target.value })}
-                            placeholder="https://example.com"
-                            required
-                        />
-                        {(errors.url || serverErrors?.url) && (
-                            <p className="text-red-500 text-sm mt-1">{errors.url || serverErrors?.url}</p>
-                        )}
-                    </div>
+                    <div className='flex flex-col gap-3'>
+                        <div>
+                            <Label htmlFor="url">URL сайта</Label>
+                            <Input
+                                id="url"
+                                type="text"
+                                value={data.url}
+                                onChange={(e) => setData({ ...data, 'url': e.target.value, 'name': e.target.value })}
+                                placeholder="https://example.com"
+                                required
+                            /></div>
 
+                    </div>
+                    {(errors.url || serverErrors?.url) && (
+                        <p className="text-red-500 text-sm mt-1">{errors.url || serverErrors?.url}</p>
+                    )}
                     <Button type="submit" disabled={processing} className="w-full" size="lg">
                         {processing ? 'Создаём...' : 'Создать проект'}
                     </Button>
@@ -254,7 +256,7 @@ export default function Projects() {
 
             {/* Модалка */}
 
-            {selectedProject && <ProjectModals toogle={setting} setToogle={() => openSettings()} project_parent={selectedProject} />}
+            {selectedProject && <ProjectModals toogle={setting} setToogle={() => openSettings()} project_parent={selectedProject} className={'!w-[360px]'} />}
             {/*  */}
 
 

@@ -12,164 +12,120 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use OpenAI;
 
 class GenerateImageController extends Controller
 {
+
+
+
     public function generate(Request $request, $projectId)
     {
-        // Валидация
         $request->validate([
-            'image_url' => 'required|url',           // ← теперь URL, а не файл
-            'mask_url'  => 'nullable|url',            // ← маска тоже может быть URL
-            'prompt'    => 'required|string|max:1000',
-            'n'         => 'integer|min:1|max:10',
-            'size'      => ['nullable', Rule::in(['256x256', '512x512', '1024x1024'])],
+            'image_url' => 'required|url',           // Исходное изображение
+            'mask_url'  => 'nullable|url',           // Маска для inpainting (опционально)
+            'n'         => 'integer|min:1|max:10',   // Количество изображений (поддерживается!)
+            'size'      => ['nullable', Rule::in(['1024x1024', '1024x1536', '1536x1024', 'auto'])], // Для gpt-image-1
         ]);
-
-
-
+        $image_id = $request->image_id;
         $project = Project::findOrFail($projectId);
-        $imageUrl = $request->image_url;  // например: https://client.com/photo.jpg
+        $client = OpenAI::client(config('services.openai.key'));
+
         try {
-            // 1. Скачиваем оригинальное изображение
-            $imageData = $this->attachRemoteFile($imageUrl, 'image', 'original.png');
+            // === 1. Скачиваем изображение/маску (API требует multipart/form-data с файлами) ===
+            $imageData = $this->downloadRemoteFile($request->image_url, 'original.png');
+            $maskData = $request->mask_url ? $this->downloadRemoteFile($request->mask_url, 'mask.png') : null;
 
-            // Параметры запроса
-            $params = [
-                'prompt' => 'Изображение в стиле аниме',
-                'n' => $request->n ?? 1,
-                'size' => $request->size ?? '512x512',
-                'user' => 1, // опционально
-            ];
+            // === 2. Строим промпт с памятью проекта ===
+            // $fullPrompt = "Проанализируй изображение по ссылке $request->image_url и создай на его основе новое изображение";
+            $fullPrompt = "Проанализируй изображение по ссылке $request->image_url и создай на его основе новое изображение, с учётом следующих параметров:"  . ' ' . ($project->ai_description) .  ' ' . $request->prompt;
 
-            // Запрос к OpenAI
-            $response = Http::withoutVerifying() // если SSL проблемы
-                ->attach('image', $imageData, 'original.png')
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . config('services.openai.key'),
-                ])->post('https://api.openai.com/v1/images/edits', $params);
+            // === 3. Вызов Images API (endpoint /v1/images/edits для image-to-image) ===
+            $response = $client->images()->create([
+                'model'         => 'gpt-image-1',
+                'prompt'        => $fullPrompt,          // Промпт (max 32k символов)
+                'n'             => 1,     // ← Теперь работает!
+                'size'          => $request->size ?? '1024x1024',
+                // 'quality'       => 'standard',               // high/medium/low (для gpt-image-1)
+            ], [
+                'image' => $imageData,                   // Обязательно для edits
+                ...($maskData ? ['mask' => $maskData] : []), // Опционально для inpainting
+            ]);
 
-            if ($response->failed()) {
-                $error = $response->json('error', ['message' => 'Unknown error']);
-                Log::error('OpenAI Edit API Error: ' . json_encode($error));
 
-                return response()->json([
-                    'error' => $error['message'] ?? 'API request failed',
-                    'type' => $error['type'] ?? 'server_error',
-                ], $response->status());
-            }
 
-            $openAiData = $response->json();
+            // === 4. Сохраняем результаты ===
             $generatedAt = now();
-            // Сохранение в БД (для каждого варианта)
-            $savedImages = collect($openAiData['data'])->map(function ($item) use ($project, $request, $generatedAt,  $openAiData) {
-                // Скачивание файла
-                $imageResponse = Http::get($item['url']);
-                if ($imageResponse->successful()) {
-                    $imageResponse = Http::get($item['url']);
+            $savedImages = collect($response->data ?? [])->map(function ($item) use ($project, $request, $generatedAt, $image_id, $fullPrompt) {
+                $imageUrl = $item->url ?? null;
+                if (!$imageUrl) return null;
 
-                    if (!$imageResponse->successful()) {
-                        return null;
-                    }
+                // Скачиваем (один раз, без дубликата!)
+                $imageResponse = Http::get($imageUrl);
+                if (!$imageResponse->successful()) return null;
 
-                    $extension = pathinfo($item['url'], PATHINFO_EXTENSION) ?: 'png';
-                    $fileName = 'generated/edit/' . $project->id . '/' . now()->timestamp . '-' . uniqid() . '.' . $extension;
-                    $filePath = 'public/' . $fileName;
+                $extension = pathinfo($imageUrl, PATHINFO_EXTENSION) ?: 'png';
 
-                    // Создаём папки
-                    Storage::disk('local')->makeDirectory(dirname($filePath));
-                    Storage::disk('local')->put($filePath, $imageResponse->body());
 
-                    $localUrl = Storage::url($fileName); // → /storage/generated/edit/2/...
+                $dateFolder = now()->format('Y-m-d');
+                $fileName = 'anime_' . uniqid() . '.' . $extension;
 
-                    $dimensions = getimagesize(Storage::disk('local')->path($filePath));
-                    $fileSize = Storage::disk('local')->size($filePath);
+                $path = "generated/anime/{$project->id}/{$image_id}/{$dateFolder}/{$fileName}";
 
-                    // return GeneratedImage::create([
-                    //     'project_id' => $project->id,
-                    //     'image_id' => $request->image_id, // опционально
-                    //     'url' => $localUrl,
-                    //     'openai_url' => $item['url'],
-                    //     'prompt' => $request->prompt,
-                    //     'model' => 'dall-e-2',
-                    //     'size' => $request->size ?? '512x512',
-                    //     'n' => $request->n ?? 1,
-                    //     'response_data' => $openAiData, // полный ответ
-                    //     'width' => null,
-                    //     'height' => null,
-                    //     'format' => '.png',
-                    //     'file_size' => $fileSize,
-                    //     'user_id' => 1,
-                    //     'status' => 'downloaded',
-                    //     'generated_at' => $generatedAt,
-                    //     'downloaded_at' => now(),
-                    // ]);
-                }
+                // Сохраняем файл
+                Storage::disk('public')->makeDirectory(dirname($path));
+                Storage::disk('public')->put($path, $imageResponse->body());
 
-                return null;
+                // Публичный URL
+                $publicUrl = Storage::url($path);
+
+                // Получаем размеры
+                $fullPath = Storage::disk('public')->path($path);
+                $info = getimagesize($fullPath);
+                $width = $info[0] ?? null;
+                $height = $info[1] ?? null;
+                $fileSize = Storage::disk('public')->size($path);
+
+                return GeneratedImage::create([
+                    'project_id'    => $project->id,
+                    'url'           => $publicUrl,
+                    'openai_url'    => $imageUrl,
+                    'prompt'        => $fullPrompt,
+                    'image_id' => $image_id,
+                    'model'         => 'dall-e-3',
+                    'size'          => $request->size ?? '1024x1024',
+                    'n'             => $request->n ?? 1,
+                    // 'response_data' => $response->toArray(),
+                    'width'         => $width,
+                    'height'        => $height,
+                    'format'        => '.' . $extension,
+                    'file_size'     => $fileSize,
+                    'user_id'       => auth()->id(),
+                    'status'        => 'downloaded',
+                    'generated_at'  => $generatedAt,
+                    'downloaded_at' => now(),
+                ]);
             })->filter()->values();
 
-            // Успех: возвращаем для фронта (Inertia или JSON)
-            return Inertia::render('GeneratedImages/Index', [
-                'generatedImages' => $savedImages,
-                'project' => $project,
-                'success' => 'Изображения успешно отредактированы!',
-            ])->toResponse($request)
-                ->setStatusCode(201);
+            // === 5. Возвращаем успех ===
+            return Inertia::location("/single/$image_id");
         } catch (\Exception $e) {
-            Log::error('Image Edit Exception: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal server error: ' . $e->getMessage()], 500);
+            Log::error('GPT-Image-1 Generation Error: ' . $e->getMessage(), [
+                'project_id' => $projectId,
+                'trace'      => $e->getTraceAsString()
+            ]);
+
+            return response()->json(['error' => 'Ошибка генерации: ' . $e->getMessage()], 500);
         }
     }
 
-
-    private function attachRemoteFile($url, $fieldName, $filename = 'image.png')
+    // Вспомогательный метод для скачивания (замени на твой attachRemoteFile)
+    private function downloadRemoteFile($url, $filename)
     {
-        // Получаем содержимое по URL
-        $imageData = file_get_contents($url);
-
-        if ($imageData === false) {
-            throw new \Exception("Не удалось загрузить изображение: $url");
+        $response = Http::get($url);
+        if (!$response->successful()) {
+            throw new \Exception("Не удалось скачать файл: {$url}");
         }
-
-        // Проверяем размер (< 4MB)
-        if (strlen($imageData) > 4 * 1024 * 1024) {
-            throw new \Exception('Изображение слишком большое (>4MB)');
-        }
-
-        // Принудительно делаем PNG (OpenAI требует PNG для edits)
-        $image = imagecreatefromstring($imageData);
-        if ($image === false) {
-            throw new \Exception('Файл не является изображением');
-        }
-
-        // Конвертируем в PNG
-        ob_start();
-        imagepng($image, null, 9);
-        $pngData = ob_get_contents();
-        ob_end_clean();
-        imagedestroy($image);
-
-        // Возвращаем как поток
-        return $pngData;
-    }
-
-    private function createTransparentMask(\CURLFile $imageFile): \CURLFile
-    {
-        $tempMask = tempnam(sys_get_temp_dir(), 'mask_') . '.png';
-
-        // Берём размеры оригинала
-        $info = getimagesize($imageFile->getFilename());
-        $width = $info[0];
-        $height = $info[1];
-
-        $img = imagecreatetruecolor($width, $height);
-        $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
-        imagefill($img, 0, 0, $transparent);
-        imagesavealpha($img, true);
-        imagepng($img, $tempMask);
-        imagedestroy($img);
-
-        return new \CURLFile($tempMask, 'image/png', 'mask.png');
+        return $response->body(); // Возвращаем сырые данные для attach
     }
 }

@@ -17,6 +17,8 @@ class ProfileStoreRequest extends FormRequest
       return [
          'url' => 'required|url|regex:/^https:\/\//',
          'name' => 'required|string|max:255',
+         'ai_name' => 'string',
+         'ai_description' => 'string',
          'parent_id' => 'nullable',
          'return_url' => 'nullable',
       ];

@@ -26,7 +26,15 @@ class Project extends Model
         'scan_status',
         'scan_started_at',
         'scan_finished_at',
-        'scan_error'
+        'scan_error',
+        'ai_name',
+        'ai_description',
+        'openai_prompt_id',
+        'openai_conversation_id',
+        'preferred_style',
+        'preferred_size',
+        'preferred_quality',
+        'generated_count',
     ];
 
     protected $casts = [

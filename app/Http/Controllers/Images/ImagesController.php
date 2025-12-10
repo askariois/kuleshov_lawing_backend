@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Images;
 
 use App\Http\Controllers\Controller;
+use App\Models\GeneratedImage;
 use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -144,9 +145,10 @@ class ImagesController extends Controller
     function single(Request $request,  $single): Response
     {
         $image =  Image::with('locations', 'duplicate', 'duplicate.sources')->find($single);
-
+        $genereteImages = GeneratedImage::where('image_id', $single)->get();
         return Inertia::render('single', [
             'image' =>   $image,
+            'genereteImages' =>   $genereteImages,
             'status' => $request->session()->get('status'),
         ]);
     }

@@ -66,7 +66,7 @@ class CheckImageDuplicates implements ShouldQueue
                 ]
             );
 
-
+            $imageDuplicate->sources()->delete();
 
             // 3. Проходим по всем найденным матчам
             foreach ($matches as $match) {
@@ -82,15 +82,12 @@ class CheckImageDuplicates implements ShouldQueue
                 $cleanDomain = strtolower(preg_replace('/^www\./', '', parse_url($domain, PHP_URL_HOST) ?: $domain));
 
                 // 4. Находим или создаём источник
-                DuplicateSource::updateOrCreate(
-                    ['image_duplicates_id' =>  $imageDuplicate->id],
-                    [
-                        'domain' => $cleanDomain,
-                        'image_duplicates_id' =>  $imageDuplicate->id,
-                        'url' =>   $backlink,
-                        'is_paid' => $isPaid ?? false,
-                    ]
-                );
+                DuplicateSource::create([
+                    'image_duplicates_id' => $imageDuplicate->id,
+                    'domain'              => $cleanDomain,
+                    'url'                 => $backlink,
+                    'is_paid'             => $isPaid,
+                ]);
             }
             ImageDuplicate::updateOrCreate(
                 ['image_id' => $this->image->id],

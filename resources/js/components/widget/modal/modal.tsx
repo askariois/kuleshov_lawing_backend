@@ -23,7 +23,7 @@ const Modal: React.FC<IModal> = ({ show, onHide, className, children, title, sub
           onClick={onHide}
         >
           <motion.div
-            className={`bg-white p-4 max-w-[600px] w-full mx-4 shadow-lg rounded-[12px]  text-[#212529] font-montserrat max-h-[80vh]  ${className}`}
+            className={`bg-white p-4 max-w-[600px] w-full mx-4 shadow-lg rounded-[12px]  text-[#212529] font-montserrat ${className}`}
             initial={{ opacity: 0, scale: 0.95, y: -50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85, y: 100 }}
@@ -32,7 +32,7 @@ const Modal: React.FC<IModal> = ({ show, onHide, className, children, title, sub
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className='flex justify-between items-center border-b-[1px] border-solid border-[#E5E5E5] pb-3 mb-4'>
+            <div className='flex justify-between items-center  pb-3 mb-4'>
               <div>
                 <h1 className='font-bold text-[#111111] text-[18px] w-full'>{title}</h1>
                 <div className='font-medium text-[#7C7C7C] text-[13px] w-full'>{subtitle}</div>

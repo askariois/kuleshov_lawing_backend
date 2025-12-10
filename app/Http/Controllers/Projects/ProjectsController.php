@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use OpenAI;
 
 class ProjectsController extends Controller
 {
@@ -81,10 +82,11 @@ class ProjectsController extends Controller
     /**
      * Show the user's projects page.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request, Project $project): Response
     {
         return Inertia::render('projects', [
             'status' => $request->session()->get('status'),
+            'editProject' => $project,
         ]);
     }
 
@@ -92,11 +94,40 @@ class ProjectsController extends Controller
      * 
      * Update the user's profile settings.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, Project $project): RedirectResponse
     {
+        $project->update($request->validated());
+        $client = OpenAI::client(config('services.openai.key'));
+
+        // === 1. Создаём/обновляем PROMPT (это и есть "ассистент", только в новой API) ===
+        if (!$project->openai_prompt_id) {
+            $prompt = $client->responses()->create([
+                'model'        => 'gpt-5',
+                'input'        => 'Инициализация системного промпта',
+                'instructions' => $request->ai_description,
+                'tools'        => [
+                    ['type' => 'web_search'], // если хочешь, чтобы помнил старые фото
+                ],
+            ]);
+
+            $project->openai_prompt_id = $prompt->id;
+        }
+
+        // === 2. Создаём CONVERSATION (это вечная память проекта) ===
+        if (! $project->openai_conversation_id) {
+            $conversation = $client->conversations()->create([]);
+            $project->openai_conversation_id = $conversation->id;
+        }
+
+        $project->update([
+            'name' => $request->name ?? $project->name,
+            'description' => $request->prompt, // можно хранить черновик
+        ]);
+
+        return back()->with('success', 'Настройки и ИИ сохранены (Responses API)');
         return redirect()
             ->route('projects.index')
-            ->with('success', 'Проект успешно создан!');
+            ->with('success', 'Проект успешно обновлён!');
     }
 
     /**

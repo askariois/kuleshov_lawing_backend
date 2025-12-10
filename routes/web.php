@@ -50,7 +50,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 
-    Route::post('/generate-img/{projectId}', [GenerateImageController::class, 'generate'])->name('logs.index');
+    Route::post('/generate-img/{projectId}', [GenerateImageController::class, 'generate']);
+    Route::get('/generate-img/{image}', [GenerateImageController::class, 'index']);
 });
 
 require __DIR__ . '/settings.php';

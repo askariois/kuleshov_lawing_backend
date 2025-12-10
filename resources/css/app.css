@@ -141,3 +141,12 @@
         @apply bg-background text-foreground;
     }
 }
+div[id^='headlessui-portal'],
+div[data-radix-portal],
+.toaster,
+.react-hot-toast,
+#toast-root,
+[data-sonner-toaster],
+[data-radix-toast-viewport] {
+    z-index: 999999 !important;
+}

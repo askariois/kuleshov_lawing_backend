@@ -15,42 +15,28 @@ import { Info } from 'lucide-react';
 
 
 export default function SingleQueue() {
-   const { image, currentPage, errors: serverErrors } = usePage<Props>().props;
-   const projectId = localStorage.getItem("selectedProjectId")
+   const { image, currentPage, genereteImages, errors: serverErrors } = usePage<Props>().props;
+   const rawId = localStorage.getItem("selectedProjectId");
+   const projectId = rawId ? JSON.parse(rawId) : null;
    const [selectedIndex, setSelectedIndex] = useState<string | null>(null);
    const [activeTab, setActiveTab] = useState<'generate' | 'info'>('generate');
    const [selectedImage, setSelectedImage] = useState<string | null>(""); // первое выбрано по дефолту
+   const [promt, setPromt] = useState<string | null>(""); // первое выбрано по дефолту
 
 
-   const onImage = (status: string) => {
-      router.post(`/primary-sorting/${images.data[0].id}/sort`, {
-         status,
-         project_id: projectId,
-         page: currentPage, // ← передаём текущую страницу
-      }, {
-         preserveState: true,
-         preserveScroll: true,
-         replace: true, // ← URL не добавляется в историю
-         onSuccess: () => {
-            toast.success('Сортировка прошла успешно');
-            // Бэкенд сам вернёт X-Inertia-Location → URL обновится
-         },
-         onError: () => {
-            toast.error('Ошибка');
-         },
-      });
-   };
+
 
 
    const handleEditImage = () => {
       const formData = new FormData();
-      formData.append('image_url', image.path);     // ← URL из базы
-      formData.append('prompt', 'преврати в аниме персонажа'); // можно из textarea
-      formData.append('n', '4');
+      formData.append('image_url', image.path);
+      formData.append('prompt', promt);
+      formData.append('n', '1');
       formData.append('size', '1024x1024');
+      formData.append('image_id', image.id);
 
-      router.post(`/generate-img/2`, formData, {
-         forceFormData: true, // ← ВАЖНО! Иначе Inertia отправит JSON
+      router.post(`/generate-img/${projectId}`, formData, {
+         forceFormData: true,
          onSuccess: () => {
             toast.success('Генерация запущена!');
          },
@@ -62,7 +48,6 @@ export default function SingleQueue() {
    };
 
 
-   const generatedImages = [preview, cat, preview, cat]
 
 
    return (
@@ -116,16 +101,20 @@ export default function SingleQueue() {
                <Sorting img={image} currentPage={currentPage} projectId={projectId} />
             )}
             {activeTab === 'generate' && (
-               <>     <div className='py-6 w-full flex justify-end border-b b-1 border-[#B1B1B1]/30%'>            <Button variant={'secondary'} disabled={false} size={'lg'} className='ml-auto'>В ТЗ на замену</Button></div>
+               <>
+                  <div className='py-6 w-full flex justify-end border-b b-1 border-[#B1B1B1]/30%'>
+                     {/* <Button variant={'secondary'} disabled={false} size={'lg'} className='ml-auto'>В ТЗ на замену</Button> */}
+                  </div>
                   <div>
-                     <div className='font-semibold text-[15px] text-[#111111] mt-6'>Промпт</div>
-                     <textarea name="" id="" placeholder='Сгенерируй классное изображение в стиле ИТ для классного сайта в сфере ИТ чтобы оно отображало классность нашего ИТ на рынке классного ИТ' className='w-full bg-[#F1F1F1] py-2 px-[10px] rounded-[8px]' rows={5}></textarea>
-                     {/* <Button type="button" size={'lg'} className='ml-auto mt-2' onClick={handleEditImage}>Сгенерировать</Button> */}
+
+                     {genereteImages.length > 0 && <><div className='font-semibold text-[15px] text-[#111111] mt-6'>Промпт</div> <textarea name="" onChange={(e) => setPromt(e.target.value)} placeholder='Сгенерируй классное изображение в стиле ИТ для классного сайта в сфере ИТ чтобы оно отображало классность нашего ИТ на рынке классного ИТ' className='w-full bg-[#F1F1F1] py-2 px-[10px] rounded-[8px]' rows={5}></textarea></>}
+
+                     <Button type="button" size={'lg'} className='ml-auto mt-2' onClick={handleEditImage}>Сгенерировать</Button>
                   </div>
 
                   <RadioGroup value={selectedIndex} onValueChange={setSelectedIndex}>
                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                        {generatedImages.map((src, index) => {
+                        {genereteImages.map((item, index) => {
                            const id = `img-${index}`;
 
                            return (
@@ -135,7 +124,7 @@ export default function SingleQueue() {
                                     value={id}
                                     id={id}
                                     className="sr-only" // прячем стандартную точку (visually hidden)
-                                    onClick={() => setSelectedImage(src)}
+                                    onClick={() => setSelectedImage(item.url)}
                                  />
 
                                  {/* Видимая кастомная кнопка */}
@@ -160,7 +149,7 @@ export default function SingleQueue() {
                                        : "border-transparent"
                                  )}>
                                     <img
-                                       src={src}
+                                       src={item.url}
                                        alt={`Вариант ${index + 1}`}
                                        className="w-full aspect-square object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
                                     />
