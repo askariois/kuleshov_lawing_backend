@@ -39,7 +39,7 @@ export function GeneralTab({ description = '', isSaving = false, project_parent,
       <div className="space-y-6 pt-6 border-t">
          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-               <Label htmlFor="prompt">Системный промпт (инструкции для ИИ)</Label>
+               <Label htmlFor="prompt">В каком стиле должны быть сгенерированы изображении:</Label>
                <textarea
                   id="prompt"
                   name="ai_description"

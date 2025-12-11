@@ -150,3 +150,15 @@ div[data-radix-portal],
 [data-radix-toast-viewport] {
     z-index: 999999 !important;
 }
+.gear-icon {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

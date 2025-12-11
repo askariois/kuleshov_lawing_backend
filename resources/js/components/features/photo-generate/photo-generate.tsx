@@ -9,16 +9,16 @@ export default function PhotoGenerate({ img, generateimg }) {
             <div className="basis-1/2  w-[520px]">
                <div className='text-[18px] font-bold mb-1'>Оригинал</div>
                <div className=" h-[520px] flex justify-center items-center bg-[#00000050] backdrop-blur-sm z-40 rounded-2xl overflow-hidden">
-                  <div className='bg-white'>
-                     <img src={img.path} alt="" className='w-full h-auto' />
+                  <div className='w-full  h-full flex '>
+                     <img src={img.path} alt="" className='w-full h-auto object-contain' />
                   </div>
                </div>
             </div>
             <div className="basis-1/2  w-[520px]">
                <div className='text-[18px] font-bold mb-1'>Генерация</div>
                <div className=" h-[520px] flex justify-center items-center bg-[#00000050] backdrop-blur-sm z-40 rounded-2xl overflow-hidden">
-                  <div className='bg-white'>
-                     <img src={generateimg} alt="" className='w-full h-auto' />
+                  <div className='w-full  h-full flex'>
+                     <img src={generateimg} alt="" className='w-full h-auto object-contain' />
                   </div>
                </div>
             </div>

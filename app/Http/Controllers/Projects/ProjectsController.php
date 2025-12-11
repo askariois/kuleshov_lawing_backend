@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Projects;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Projects\ProfileStoreRequest;
 use App\Http\Requests\Projects\ProjectUpdateRequest;
+use App\Jobs\ProjectAIJob;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -97,36 +98,8 @@ class ProjectsController extends Controller
     public function update(ProjectUpdateRequest $request, Project $project): RedirectResponse
     {
         $project->update($request->validated());
-        $client = OpenAI::client(config('services.openai.key'));
-
-        // === 1. Создаём/обновляем PROMPT (это и есть "ассистент", только в новой API) ===
-        if (!$project->openai_prompt_id) {
-            $prompt = $client->responses()->create([
-                'model'        => 'gpt-5',
-                'input'        => 'Инициализация системного промпта',
-                'instructions' => $request->ai_description,
-                'tools'        => [
-                    ['type' => 'web_search'], // если хочешь, чтобы помнил старые фото
-                ],
-            ]);
-
-            $project->openai_prompt_id = $prompt->id;
-        }
-
-        // === 2. Создаём CONVERSATION (это вечная память проекта) ===
-        if (! $project->openai_conversation_id) {
-            $conversation = $client->conversations()->create([]);
-            $project->openai_conversation_id = $conversation->id;
-        }
-
-        $project->update([
-            'ai_description' => $request->ai_description,
-        ]);
-
-        return back()->with('success', 'Настройки и ИИ сохранены (Responses API)');
-        return redirect()
-            ->route('projects.index')
-            ->with('success', 'Проект успешно обновлён!');
+        ProjectAIJob::dispatch($project->id, $request->ai_description);
+        return back()->with('success', 'Настройки сохранены. ИИ-конфигурация обрабатывается в фоне...');
     }
 
     /**

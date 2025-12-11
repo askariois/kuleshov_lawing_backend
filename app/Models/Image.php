@@ -21,6 +21,7 @@ class Image extends Model
         'height',
         'status',
         'project_id',
+        'status_generate',
     ];
     protected $casts = [
         'dimensions' => 'array',

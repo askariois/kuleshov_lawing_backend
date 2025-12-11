@@ -124,14 +124,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 {isProjectSelected && (
-                    <>
-                        <NavMain items={mainNavItems(selectedProjectId)} />
-                        {/* <div className="mx-4 mt-4">
-                            <Button type="button" variant="primary" size="lg" className="w-full" onClick={onScan}>
-                                Сканирование
-                            </Button>
-                        </div> */}
-                    </>
+                    <NavMain items={mainNavItems(selectedProjectId)} />
                 )}
 
                 {!isProjectSelected && (

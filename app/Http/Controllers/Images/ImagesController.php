@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Images;
 use App\Http\Controllers\Controller;
 use App\Models\GeneratedImage;
 use App\Models\Image;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -136,8 +137,10 @@ class ImagesController extends Controller
     {
         $images = Image::with('locations');
         $images =   $images->where('project_id', $id)->where('status', 'queue')->paginate(30);
+        $project = Project::find($id);
         return Inertia::render('queue', [
             'images' =>   $images,
+            'project' =>   $project,
             'status' => $request->session()->get('status'),
         ]);
     }

@@ -35,6 +35,7 @@ class Project extends Model
         'preferred_size',
         'preferred_quality',
         'generated_count',
+        'status',
     ];
 
     protected $casts = [

@@ -2,16 +2,15 @@
 
 import AppLayout from '@/layouts/app-layout';
 import Header from '../components/ui/header';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { useEffect, useRef, useState } from 'react';
-import Modal from '@/components/widget/modal/modal';
-import { Input } from '@/components/ui/input';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import CopyLink from '@/components/ui/copy-link/CopyLink';
 import Status from '../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
+import Modal from '@/components/widget/modal/modal';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { log } from 'console';
 import TextLink from '@/components/text-link';
 
 // === Проект ===
@@ -49,24 +48,14 @@ interface Props extends PageProps {
    errors?: Record<string, string>;
 }
 
-
-
-
 export default function Queue() {
-   const id = localStorage.getItem("selectedProjectId")
-   const { images, raw, errors: serverErrors } = usePage<Props>().props;
-
-   const { data, setData, post, processing, errors } = useForm({
-      name: '',
-      url: 'https://', // Предзаполняем https://
-   });
+   const { images, project, errors: serverErrors } = usePage<Props>().props;
+   const [isModalOpen, setIsModalOpen] = useState(true);
 
    return (
       <AppLayout>
          <Header title="Генерация изображений" subtitle={`Всего: ${images.total}`}>
          </Header>
-
-
 
          {/* Таблица */}
          <div className="w-full mt-6 overflow-x-auto">
@@ -86,7 +75,6 @@ export default function Queue() {
             </div>
 
             {images.data.length !== 0 && images.data.map((image) => {
-
                return (<Link
                   href={`/single/${image.id}`}
                   key={image.id}
@@ -95,7 +83,6 @@ export default function Queue() {
                      gridTemplateColumns:
                         "minmax(52px, 52px) minmax(356px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(356px, 1fr) minmax(140px, 1fr)",
                   }}
-
                >
                   <div>
                      <img
@@ -117,13 +104,22 @@ export default function Queue() {
                   <div className={`font-medium text-[13px] `}>
                      <Status status={image.status} />
                   </div>
-
                </Link>
                )
             })}
 
             <Pagination data={images} />
          </div>
+         {!project.ai_description && <Modal show={isModalOpen} onHide={() => setIsModalOpen(false)} title="Вы еще не создали промт для этого проекта">
+            <form className="space-y-4">
+               <div className='flex flex-col gap-3'>
+                  <TextLink href={'/projects'} className="w-full bg-[#3E95FB] hover:text-white text-white text-center" size="lg">
+                     Перейти на проект
+                  </TextLink>
+               </div>
+            </form>
+         </Modal>}
+
 
       </AppLayout >
    );

@@ -15,15 +15,8 @@ import { Pagination } from '@/components/ui/pagination/pagination';
 import TextLink from '@/components/text-link';
 import { Checkbox } from '@/components/ui/checkbox';
 import toast from 'react-hot-toast';
-import { log } from 'console';
 import {
-   Sidebar,
-   SidebarContent,
-   SidebarFooter,
-   SidebarHeader,
    SidebarMenu,
-   SidebarMenuButton,
-   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import {
    Select,

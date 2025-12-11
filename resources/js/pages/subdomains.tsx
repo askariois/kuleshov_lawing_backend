@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import dayjs from 'dayjs';
-import toast from 'react-hot-toast';
 import { useConfirm } from '@/hooks/useConfirm';
 import ProjectModals from '@/components/features/modals/project-modals';
 import ScanButtons from '@/components/features/scan-buttons/scan-buttons';
@@ -50,13 +49,6 @@ interface Props extends PageProps {
 }
 
 
-interface ProgressData {
-   progress: number;
-   processed_pages: number;
-   total_pages: number;
-   status: 'pending' | 'running' | 'completed' | 'failed';
-}
-
 
 export default function Subdomains() {
    const [setting, setSetting] = useState(false);
@@ -71,6 +63,7 @@ export default function Subdomains() {
    );
 
    const onImage = (projectId: number) => {
+      localStorage.setItem("selectedProjectId", projectId)
       window.location.href = `/images/${projectId}`;
    }
 

@@ -71,7 +71,7 @@ class CheckImageDuplicates implements ShouldQueue
             // 3. Проходим по всем найденным матчам
             foreach ($matches as $match) {
                 $domain = $match['domain'] ?? null;
-                $backlink = $match['backlinks'][0]['url'] ?? null; // первый URL
+                $backlink = $match['backlinks'][0]['backlink'] ?? null; // первый URL
                 $isPaid = $match['tags'][0] == "stock";
 
                 if (!$domain || !$backlink) {

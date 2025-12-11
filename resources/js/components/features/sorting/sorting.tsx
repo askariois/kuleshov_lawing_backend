@@ -2,7 +2,6 @@ import Status from '@/components/ui/status/Status'
 import CopyLink from '@/components/ui/copy-link/CopyLink';
 import TextLink from '@/components/text-link';
 import { router } from '@inertiajs/react';
-import SiteChips from '../sitechips/sitechips';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -96,11 +95,7 @@ function Sorting({ img, images, projectId, buttons }) {
 
                            <div className='flex items-center flex-col justify-center'>
                               <Status status={img.status} />
-                              {img.status == "process" &&
-                                 <Button type="button" variant={img?.duplicate?.status == "pending" ? "pending" : 'primary'} className='mt-4' onClick={img?.duplicate?.status == "pending" ? router.reload({ preserveScroll: true }) : () => onDuplicate(img.id)}>
-                                    {img?.duplicate?.status == "pending" ? "Ожидается" : "Перезапуск"}
-                                 </Button>
-                              }
+
                            </div>
 
                         </div>
@@ -135,11 +130,20 @@ function Sorting({ img, images, projectId, buttons }) {
                            )}
                            {img.duplicate && (
                               <div className='mt-7'>
-                                 <div className='text-[18px] font-bold'>
-                                    Найденные совпадения <span className='text-[32px] text-primary'>{img.duplicate.images_count}</span>
-                                 </div>
-                                 <div className='text-[18px] font-bold'>
-                                    Платные <span className='text-[32px] text-[#E45454]'>{img.duplicate.stock_images_count}</span>
+                                 <div className='flex justify-between items-center'>
+                                    <div>
+                                       <div className='text-[18px] font-bold'>
+                                          Найденные совпадения <span className='text-[32px] text-primary'>{img.duplicate.images_count}</span>
+                                       </div>
+                                       <div className='text-[18px] font-bold'>
+                                          Платные <span className='text-[32px] text-[#E45454]'>{img.duplicate.stock_images_count}</span>
+                                       </div></div>
+
+                                    {img.status == "process" &&
+                                       <Button type="button" variant={img?.duplicate?.status == "pending" ? "pending" : 'primary'} className='mt-4' onClick={img?.duplicate?.status == "pending" ? router.reload({ preserveScroll: true }) : () => onDuplicate(img.id)}>
+                                          {img?.duplicate?.status == "pending" ? "Ожидается" : "Перезапуск"}
+                                       </Button>
+                                    }
                                  </div>
 
                                  {/* Новый красивый вывод дублей */}

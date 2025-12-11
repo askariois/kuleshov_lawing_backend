@@ -1,5 +1,4 @@
 
-import AppLayout from '@/layouts/app-layout';
 import Header from '@/components/ui/header';
 import { router, usePage } from '@inertiajs/react';
 import toast from 'react-hot-toast';
@@ -8,10 +7,18 @@ import Sorting from '@/components/features/sorting/sorting';
 import { useState } from 'react';
 import { cn } from "@/lib/utils"
 import PhotoGenerate from '@/components/features/photo-generate/photo-generate';
-import cat from "../../../../images/Image.png"
-import preview from "../../../../images/main-page-server.webp"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Info } from 'lucide-react';
+import {
+   Dialog,
+   DialogContent,
+   DialogDescription,
+   DialogHeader,
+   DialogTitle,
+   DialogTrigger,
+} from "@/components/ui/dialog"
+
+
 
 
 export default function SingleQueue() {
@@ -22,6 +29,8 @@ export default function SingleQueue() {
    const [activeTab, setActiveTab] = useState<'generate' | 'info'>('generate');
    const [selectedImage, setSelectedImage] = useState<string | null>(""); // первое выбрано по дефолту
    const [promt, setPromt] = useState<string | null>(""); // первое выбрано по дефолту
+   const [promtDescription, setPromtDescription] = useState<string | null>("");
+   const [isCopied, setIsCopied] = useState(false);
 
    const handleEditImage = () => {
       const formData = new FormData();
@@ -43,7 +52,22 @@ export default function SingleQueue() {
       });
    };
 
+   const onDescription = (description: string) => {
+      setPromtDescription(description)
+   }
 
+   // Функция копирования в буфер обмена
+   const handleCopy = async () => {
+      try {
+         await navigator.clipboard.writeText(promtDescription);
+         setIsCopied(true);
+
+      } catch (err) {
+         toast.error('Не удалось скопировать');
+         console.error('Ошибка копирования:', err);
+      }
+   };
+   console.log(image);
 
 
    return (
@@ -88,7 +112,7 @@ export default function SingleQueue() {
             </div>
          </Header>
 
-         <div >
+         <Dialog >
             {activeTab === 'generate' && (
                <PhotoGenerate img={image} generateimg={selectedImage} />
             )}
@@ -101,18 +125,19 @@ export default function SingleQueue() {
                   <div className='py-6 w-full flex justify-end border-b b-1 border-[#B1B1B1]/30%'>
                      {/* <Button variant={'secondary'} disabled={false} size={'lg'} className='ml-auto'>В ТЗ на замену</Button> */}
                   </div>
+
                   <div>
+                     {genereteImages.length > 0 && <><div className='font-semibold text-[15px] text-[#111111] mt-6'>Промпт</div> <textarea name="" onChange={(e) => setPromt(e.target.value)} className='w-full bg-[#F1F1F1] py-2 px-[10px] rounded-[8px]' rows={5}></textarea></>}
 
-                     {genereteImages.length > 0 && <><div className='font-semibold text-[15px] text-[#111111] mt-6'>Промпт</div> <textarea name="" onChange={(e) => setPromt(e.target.value)} placeholder='Сгенерируй классное изображение в стиле ИТ для классного сайта в сфере ИТ чтобы оно отображало классность нашего ИТ на рынке классного ИТ' className='w-full bg-[#F1F1F1] py-2 px-[10px] rounded-[8px]' rows={5}></textarea></>}
-
-                     <Button type="button" size={'lg'} className='ml-auto mt-2' onClick={handleEditImage}>Сгенерировать</Button>
+                     <Button type="button" variant={image?.status_generate == "pending" ? "pending" : 'primary'} size={'lg'} className='ml-auto mt-2' onClick={image?.status_generate == "pending" ? "" : () => handleEditImage()}>
+                        {image?.status_generate == "pending" ? "Ожидается..." : "Сгенерировать"}
+                     </Button>
                   </div>
 
                   <RadioGroup value={selectedIndex} onValueChange={setSelectedIndex}>
-                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mt-6">
                         {genereteImages.map((item, index) => {
                            const id = `img-${index}`;
-
                            return (
                               <div key={index} className="relative group cursor-pointer">
                                  {/* Кастомная большая радиокнопка */}
@@ -152,19 +177,35 @@ export default function SingleQueue() {
                                  </div>
 
                                  {/* Номер */}
-                                 <div className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2.5 py-1 rounded backdrop-blur-sm font-medium">
+                                 <DialogTrigger className="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2.5 py-1 rounded backdrop-blur-sm font-medium cursor-pointer" onClick={() => onDescription(item.prompt)}>
                                     <Info className="w-5 h-5" strokeWidth={2.5} />
-                                 </div>
+                                 </DialogTrigger>
                               </div>
                            );
-                        })}</div></RadioGroup>
+                        })}</div>
+                  </RadioGroup>
+               </>
+            )}
 
-
-               </>)}
-
-
-
-         </div>
+            <DialogContent>
+               <DialogHeader>
+                  <DialogTitle>Промт</DialogTitle>
+                  <DialogDescription>
+                     {promtDescription}
+                     <Button className="mt-4 w-full" disabled={!promtDescription} onClick={handleCopy} variant={isCopied ? "secondary" : "default"}>{isCopied ? (
+                        <>
+                           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                           </svg>
+                           Скопировано ✓
+                        </>
+                     ) : (
+                        'Скопировать промпт'
+                     )}</Button>
+                  </DialogDescription>
+               </DialogHeader>
+            </DialogContent>
+         </Dialog>
       </ >
    )
 }
