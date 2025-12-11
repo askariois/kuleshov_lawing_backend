@@ -46,7 +46,7 @@ class GenerateImageController extends Controller
                 'prompt'        => $fullPrompt,          // Промпт (max 32k символов)
                 'n'             => 1,     // ← Теперь работает!
                 'size'          => $request->size ?? '1024x1024',
-                // 'quality'       => 'standard',               // high/medium/low (для gpt-image-1)
+                'quality'       => 'medium',               // high/medium/low (для gpt-image-1)
             ], [
                 'image' => $imageData,                   // Обязательно для edits
                 ...($maskData ? ['mask' => $maskData] : []), // Опционально для inpainting
@@ -58,23 +58,30 @@ class GenerateImageController extends Controller
             $generatedAt = now();
             $savedImages = collect($response->data ?? [])->map(function ($item) use ($project, $request, $generatedAt, $image_id, $fullPrompt) {
                 $imageUrl = $item->url ?? null;
-                if (!$imageUrl) return null;
+                $b64Data = $item->b64_json ?? null;  // ← Новый: для base64 в gpt-image-1
 
-                // Скачиваем (один раз, без дубликата!)
-                $imageResponse = Http::get($imageUrl);
-                if (!$imageResponse->successful()) return null;
-
-                $extension = pathinfo($imageUrl, PATHINFO_EXTENSION) ?: 'png';
-
+                if ($imageUrl) {
+                    // Старый способ: скачиваем по URL (для DALL·E)
+                    $imageResponse = Http::get($imageUrl);
+                    if (!$imageResponse->successful()) return null;
+                    $imageBinary = $imageResponse->body();
+                    $extension = pathinfo($imageUrl, PATHINFO_EXTENSION) ?: 'png';
+                } elseif ($b64Data) {
+                    // Новый способ: base64 для gpt-image-1
+                    $imageBinary = base64_decode($b64Data);
+                    if (!$imageBinary) return null;
+                    $extension = 'png';  // По умолчанию PNG для b64_json; можно добавить логику для JPEG/WebP по MIME
+                } else {
+                    return null;  // Нет данных
+                }
 
                 $dateFolder = now()->format('Y-m-d');
-                $fileName = 'anime_' . uniqid() . '.' . $extension;
-
-                $path = "generated/anime/{$project->id}/{$image_id}/{$dateFolder}/{$fileName}";
+                $fileName = 'image_' . uniqid() . '.' . $extension;
+                $path = "generated/image/{$project->id}/{$image_id}/{$dateFolder}/{$fileName}";
 
                 // Сохраняем файл
                 Storage::disk('public')->makeDirectory(dirname($path));
-                Storage::disk('public')->put($path, $imageResponse->body());
+                Storage::disk('public')->put($path, $imageBinary);  // ← Теперь используем $imageBinary
 
                 // Публичный URL
                 $publicUrl = Storage::url($path);
@@ -89,13 +96,12 @@ class GenerateImageController extends Controller
                 return GeneratedImage::create([
                     'project_id'    => $project->id,
                     'url'           => $publicUrl,
-                    'openai_url'    => $imageUrl,
+                    'openai_url'    => $imageUrl ?? null,  // URL может быть null для b64
                     'prompt'        => $fullPrompt,
-                    'image_id' => $image_id,
-                    'model'         => 'dall-e-3',
+                    'image_id'      => $image_id,
+                    'model'         => 'gpt-image-1',      // ← Обновите на актуальную модель (было 'dall-e-3')
                     'size'          => $request->size ?? '1024x1024',
                     'n'             => $request->n ?? 1,
-                    // 'response_data' => $response->toArray(),
                     'width'         => $width,
                     'height'        => $height,
                     'format'        => '.' . $extension,

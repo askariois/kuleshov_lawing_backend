@@ -21,13 +21,15 @@ export function GeneralTab({ description = '', isSaving = false, project_parent,
 
    const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
-      router.put(`/projects/${projectId}`, data, {
+      put(`/projects/${project_parent.id}`, {
+         data,
          onSuccess: () => {
-            setToogle(false)
-            toast.success('Успешно обновлено')
+            setToogle(false);
+            toast.success('Успешно обновлено');
          },
          onError: (errors) => {
-            console.log('Ошибки валидации:', errors);
+            console.log('Ошибки:', errors);
+            toast.error('Не удалось сохранить');
          },
       });
    }
@@ -49,8 +51,8 @@ export function GeneralTab({ description = '', isSaving = false, project_parent,
                />
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={isSaving}>
-               {isSaving ? 'Сохраняем...' : 'Сохранить промпт'}
+            <Button type="submit" size="lg" className="w-full" disabled={processing}>
+               {processing ? 'Сохраняем...' : 'Сохранить промпт'}
             </Button>
          </form>
       </div>

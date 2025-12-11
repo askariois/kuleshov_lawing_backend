@@ -71,7 +71,7 @@ export function AppSidebar() {
         });
     };
 
-    const onSelected = (value: string) => {
+    const onSelected = (value: number) => {
         const projectId = value || null;
         setSelectedProjectId(projectId);
 
@@ -112,7 +112,7 @@ export function AppSidebar() {
                         <SelectContent className="bg-[#F1F1F1]">
                             <SelectGroup>
                                 {sidebar.projects.map((item) => (
-                                    <SelectItem key={item.id} value={String(item.id)}>
+                                    <SelectItem key={item.id} value={Number(item.id)}>
                                         {item.name}
                                     </SelectItem>
                                 ))}

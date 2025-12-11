@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Projects;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Projects\ProfileStoreRequest;
-use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Http\Requests\Projects\ProjectUpdateRequest;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,7 +75,7 @@ class ProjectsController extends Controller
         $redirectTo = $request->return_url;
         Project::create($data);
 
-        return Inertia::location($redirectTo); // ← Это правильный способ!
+        return back()->with('flash', ['success' => 'Проект успешно создан!']);
     }
 
 
@@ -94,7 +94,7 @@ class ProjectsController extends Controller
      * 
      * Update the user's profile settings.
      */
-    public function update(ProfileUpdateRequest $request, Project $project): RedirectResponse
+    public function update(ProjectUpdateRequest $request, Project $project): RedirectResponse
     {
         $project->update($request->validated());
         $client = OpenAI::client(config('services.openai.key'));
@@ -120,8 +120,7 @@ class ProjectsController extends Controller
         }
 
         $project->update([
-            'name' => $request->name ?? $project->name,
-            'description' => $request->prompt, // можно хранить черновик
+            'ai_description' => $request->ai_description,
         ]);
 
         return back()->with('success', 'Настройки и ИИ сохранены (Responses API)');

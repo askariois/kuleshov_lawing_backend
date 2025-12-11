@@ -23,10 +23,6 @@ export default function SingleQueue() {
    const [selectedImage, setSelectedImage] = useState<string | null>(""); // первое выбрано по дефолту
    const [promt, setPromt] = useState<string | null>(""); // первое выбрано по дефолту
 
-
-
-
-
    const handleEditImage = () => {
       const formData = new FormData();
       formData.append('image_url', image.path);

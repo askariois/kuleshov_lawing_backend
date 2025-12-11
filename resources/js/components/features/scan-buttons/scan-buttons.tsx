@@ -1,15 +1,40 @@
 import { useConfirm } from '@/hooks/useConfirm';
-import primary from '@/routes/primary';
 import { router } from '@inertiajs/react';
 import React from 'react'
+import toast from 'react-hot-toast';
 
-export default function ScanButtons({ project, isAnyScanning, sitemap, subdomain }) {
+interface Project {
+   id: number;
+   name: string;
+   url: string;
+   last_scan: string | null;
+   images_count: number;
+   processed_images: number;
+   not_processed_images: number;
+   format_images: string;
+   scan_status: string;
+   autoscan: boolean;
+   pages_count: number;
+   parent_id: number;
+   subdomains_count: number;
+   time_autoscan: string | null;
+   subdomains?: Project[]; // ← добавляем поддомены
+}
+
+interface ScanButtonsProps {
+   project: Project;
+   isAnyScanning: boolean;
+   sitemap?: boolean;        // true = сканирование по sitemap.xml
+   subdomain?: boolean;      // true = это поддомен (нужен возврат на /subdomains/:id)
+}
+
+export default function ScanButtons({ project, isAnyScanning, sitemap, subdomain }: ScanButtonsProps) {
    const { confirm, ConfirmDialog } = useConfirm();
    const returnUrl = subdomain ? `/subdomains/${project.parent_id}` : "/projects";
 
 
 
-   const onScan_1 = async (url, id) => {
+   const onScan_1 = async (url: string, id: number) => {
       const agreed = await confirm({
          title: 'Вы уверены, что хотите запустить сканирование?',
          message: 'Это действие нельзя отменить.',
@@ -28,7 +53,7 @@ export default function ScanButtons({ project, isAnyScanning, sitemap, subdomain
       }
    }
 
-   const onScan_2 = async (url, id) => {
+   const onScan_2 = async (url: string, id: number) => {
       const agreed = await confirm({
          title: 'Вы уверены, что хотите запустить сканирование?',
          message: 'Это действие нельзя отменить.',

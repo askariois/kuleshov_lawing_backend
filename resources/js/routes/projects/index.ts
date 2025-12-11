@@ -523,7 +523,7 @@ update.patch = (args: { project: number | { id: number } } | [project: number | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:136
+ * @see app/Http/Controllers/Projects/ProjectsController.php:135
  * @route '/projects/{project}'
  */
 export const destroy = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -538,7 +538,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:136
+ * @see app/Http/Controllers/Projects/ProjectsController.php:135
  * @route '/projects/{project}'
  */
 destroy.url = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -566,7 +566,7 @@ destroy.url = (args: { project: string | number } | [project: string | number ] 
 
 /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:136
+ * @see app/Http/Controllers/Projects/ProjectsController.php:135
  * @route '/projects/{project}'
  */
 destroy.delete = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -576,7 +576,7 @@ destroy.delete = (args: { project: string | number } | [project: string | number
 
     /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:136
+ * @see app/Http/Controllers/Projects/ProjectsController.php:135
  * @route '/projects/{project}'
  */
     const destroyForm = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -591,7 +591,7 @@ destroy.delete = (args: { project: string | number } | [project: string | number
 
             /**
 * @see \App\Http\Controllers\Projects\ProjectsController::destroy
- * @see app/Http/Controllers/Projects/ProjectsController.php:136
+ * @see app/Http/Controllers/Projects/ProjectsController.php:135
  * @route '/projects/{project}'
  */
         destroyForm.delete = (args: { project: string | number } | [project: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

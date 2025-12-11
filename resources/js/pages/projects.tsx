@@ -10,16 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
 import dayjs from 'dayjs';
-import CopyLink from '@/components/ui/copy-link/CopyLink';
-import { local } from '@/routes/storage';
 import toast from 'react-hot-toast';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Checkbox } from '@radix-ui/react-checkbox';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import ProjectModals from '@/components/features/modals/project-modals';
-import { log } from 'console';
 import ScanButtons from '@/components/features/scan-buttons/scan-buttons';
-import { Textarea } from "@/components/ui/textarea"
 
 // === Проект ===
 interface Project {
@@ -32,6 +26,8 @@ interface Project {
     not_processed_images: number;
     format_images: string;
     autoscan: boolean;
+    pages_count: number;
+    subdomains_count: number;
     time_autoscan: string | null;
     subdomains?: Project[]; // ← добавляем поддомены
 }
@@ -58,14 +54,6 @@ interface Props extends PageProps {
 }
 
 
-interface ProgressData {
-    progress: number;
-    processed_pages: number;
-    total_pages: number;
-    status: 'pending' | 'running' | 'completed' | 'failed';
-}
-
-
 export default function Projects() {
     const [add, setAdd] = useState(false);
     const [setting, setSetting] = useState(false);
@@ -73,7 +61,7 @@ export default function Projects() {
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const { confirm, ConfirmDialog } = useConfirm();
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         url: 'https://',
         ai_name: '',
@@ -84,14 +72,16 @@ export default function Projects() {
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post('/projects', data, {
+        post('/projects', {
+            preserveScroll: true,
             onSuccess: () => {
                 setAdd(false);
-                setData({ name: '', url: '' });
+                reset();
+                toast.success('Проект успешно создан');
             },
-            onError: (errors) => {
-                console.log('Ошибки валидации:', errors);
-            },
+            onError: () => {
+                toast.error('Ошибка создания проекта');
+            }
         });
     };
 
@@ -101,6 +91,7 @@ export default function Projects() {
 
     const onImage = (projectId: number) => {
         window.location.href = `/images/${projectId}`;
+        localStorage.setItem("selectedProjectId", projectId)
     }
 
     const openSettings = (project: Project) => {
