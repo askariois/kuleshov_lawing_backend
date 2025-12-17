@@ -61,8 +61,11 @@ export default function SingleDefault() {
                   <Button variant="secondary" size={'full'} className='text-[18px] font-semibold hover:bg-primary hover:text-white' onClick={() => onImage('author')}>
                      Авторское
                   </Button>
-                  <Button variant="secondary" size={'full'} className='ml-6 text-[18px] font-semibold hover:bg-primary hover:text-white' onClick={() => onImage('free')}>
+                  <Button variant="secondary" size={'full'} className='text-[18px] font-semibold hover:bg-primary hover:text-white' onClick={() => onImage('free')}>
                      Бесплатное
+                  </Button>
+                  <Button variant="secondary" size={'full'} className='text-[18px] font-semibold hover:bg-primary hover:text-white' onClick={() => onImage('ToR')}>
+                     ТЗ на замену
                   </Button>
                   <Button variant="secondary" size={'full'} className='ml-6 text-[18px] font-semibold hover:bg-primary hover:text-white' onClick={() => onImage('queue')}>
                      На генерацию

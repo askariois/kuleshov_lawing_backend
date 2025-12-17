@@ -86,18 +86,14 @@ function Sorting({ img, images, projectId, buttons }) {
                                  <span className="text-[16px] font-semibold text-[#7C7C7C]">
                                     .{ext}
                                  </span>
-                              </div>{" "}
+                              </div>
                               <a href={img.path} className="font-medium text-[13px] text-[#7C7C7C] flex items-baseline  hover:text-primary" target='_blank' rel="noreferrer">
                                  {img.path} <CopyLink />
                               </a>
                            </div>
-
-
                            <div className='flex items-center flex-col justify-center'>
                               <Status status={img.status} />
-
                            </div>
-
                         </div>
                         <div className="mt-4">
                            {/* Показываем все или только первые 5 */}

@@ -12,6 +12,7 @@ import SinglDefault from './single-default/single-default';
 import { Props } from 'node_modules/@headlessui/react/dist/types';
 import SingleDefault from './single-default/single-default';
 import SingleQueue from './single-queue/single-queue';
+import SingleTOR from './single-ToR/single-ToR';
 
 
 export default function Single() {
@@ -24,6 +25,9 @@ export default function Single() {
       }
       if (['queue'].includes(image.status)) {
          return <SingleQueue />;
+      }
+      if (['ToR'].includes(image.status)) {
+         return <SingleTOR />;
       }
    }
 

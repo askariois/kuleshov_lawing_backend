@@ -8,9 +8,7 @@ import CopyLink from '@/components/ui/copy-link/CopyLink';
 import Status from '../components/ui/status/Status';
 import { Pagination } from '@/components/ui/pagination/pagination';
 import Modal from '@/components/widget/modal/modal';
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { log } from 'console';
 import TextLink from '@/components/text-link';
 
 // === Проект ===
